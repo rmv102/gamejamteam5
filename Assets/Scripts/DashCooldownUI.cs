@@ -17,7 +17,6 @@ public class DashCooldownUI : MonoBehaviour
     
     [Header("Animation Settings")]
     [SerializeField] private float pulseSpeed = 2f;
-    [SerializeField] private float pulseScale = 1.2f;
     
     private PlayerMovement playerMovement;
     private float originalScale;
@@ -26,7 +25,7 @@ public class DashCooldownUI : MonoBehaviour
     void Start()
     {
         // Find the player movement component
-        playerMovement = FindObjectOfType<PlayerMovement>();
+        playerMovement = FindFirstObjectByType<PlayerMovement>();
         if (playerMovement == null)
         {
             Debug.LogError("DashCooldownUI: No PlayerMovement found in scene!");

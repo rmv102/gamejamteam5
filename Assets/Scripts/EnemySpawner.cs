@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Linq;
+using System.Collections.Generic;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -169,16 +170,17 @@ public class EnemySpawner : MonoBehaviour
     
     Vector2 FindSpawnPositionOnVeins()
     {
-        // Find all vein objects in the scene by name
-        GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
-        GameObject[] veinObjects = allObjects.Where(go => go.name.Contains("Vein")).ToArray();
+        // Try multiple methods to find vein objects
+        GameObject[] veinObjects = FindVeinObjects();
         
         if (showDebugInfo)
         {
-            Debug.Log($"EnemySpawner: Found {veinObjects.Length} vein objects");
+            Debug.Log($"EnemySpawner: Found {veinObjects.Length} vein objects using multiple detection methods");
             foreach (GameObject vein in veinObjects)
             {
-                Debug.Log($"  - {vein.name} at position {vein.transform.position}");
+                Collider2D collider = vein.GetComponent<Collider2D>();
+                SpriteRenderer renderer = vein.GetComponent<SpriteRenderer>();
+                Debug.Log($"  - {vein.name} at {vein.transform.position}, Has Collider: {collider != null}, Has Renderer: {renderer != null}");
             }
         }
 
@@ -186,7 +188,7 @@ public class EnemySpawner : MonoBehaviour
         {
             if (showDebugInfo)
             {
-                Debug.LogWarning("EnemySpawner: No vein objects found in scene!");
+                Debug.LogWarning("EnemySpawner: No vein objects found in scene! Trying emergency spawn...");
             }
             return Vector2.zero;
         }
@@ -223,41 +225,117 @@ public class EnemySpawner : MonoBehaviour
         return Vector2.zero;
     }
     
+    GameObject[] FindVeinObjects()
+    {
+        List<GameObject> foundVeins = new List<GameObject>();
+        
+        // Method 1: Find by name containing "Vein"
+        GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+        foreach (GameObject obj in allObjects)
+        {
+            if (obj.name.ToLower().Contains("vein"))
+            {
+                foundVeins.Add(obj);
+            }
+        }
+        
+        // Method 2: Find by layer if veins are on a specific layer
+        if (foundVeins.Count == 0)
+        {
+            Collider2D[] allColliders = FindObjectsByType<Collider2D>(FindObjectsSortMode.None);
+            foreach (Collider2D collider in allColliders)
+            {
+                if (((1 << collider.gameObject.layer) & veinLayer) != 0)
+                {
+                    if (!foundVeins.Contains(collider.gameObject))
+                    {
+                        foundVeins.Add(collider.gameObject);
+                    }
+                }
+            }
+        }
+        
+        // Method 3: Find by red color (if veins are red)
+        if (foundVeins.Count == 0)
+        {
+            SpriteRenderer[] allRenderers = FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
+            foreach (SpriteRenderer renderer in allRenderers)
+            {
+                // Check if the sprite is red-ish
+                if (renderer.color.r > 0.7f && renderer.color.g < 0.3f && renderer.color.b < 0.3f)
+                {
+                    if (!foundVeins.Contains(renderer.gameObject))
+                    {
+                        foundVeins.Add(renderer.gameObject);
+                    }
+                }
+            }
+        }
+        
+        return foundVeins.ToArray();
+    }
+    
     Vector2 FindSpawnPositionOnSpecificVein(GameObject vein)
     {
         // Get the vein's collider
         Collider2D veinCollider = vein.GetComponent<Collider2D>();
-        if (veinCollider == null) 
+        SpriteRenderer veinRenderer = vein.GetComponent<SpriteRenderer>();
+        
+        if (showDebugInfo)
         {
-            if (showDebugInfo)
-            {
-                Debug.LogWarning($"  - {vein.name} has no Collider2D component! Trying fallback method...");
-            }
-            // Fallback: try to spawn near the vein's transform position
-            return FindSpawnPositionNearVein(vein);
+            Debug.Log($"  - Testing {vein.name}: Collider={veinCollider != null}, Renderer={veinRenderer != null}");
         }
         
-        // Check if bounds are valid (not a single point)
+        // Method 1: Try collider-based spawning
+        if (veinCollider != null)
+        {
+            Vector2 colliderSpawnPos = TryColliderBasedSpawning(vein, veinCollider);
+            if (colliderSpawnPos != Vector2.zero)
+            {
+                return colliderSpawnPos;
+            }
+        }
+        
+        // Method 2: Try renderer-based spawning (for sprites without colliders)
+        if (veinRenderer != null)
+        {
+            Vector2 rendererSpawnPos = TryRendererBasedSpawning(vein, veinRenderer);
+            if (rendererSpawnPos != Vector2.zero)
+            {
+                return rendererSpawnPos;
+            }
+        }
+        
+        // Method 3: Fallback to transform position
+        if (showDebugInfo)
+        {
+            Debug.Log($"  - All methods failed for {vein.name}, using transform position fallback");
+        }
+        return FindSpawnPositionNearVein(vein);
+    }
+    
+    Vector2 TryColliderBasedSpawning(GameObject vein, Collider2D veinCollider)
+    {
         Bounds veinBounds = veinCollider.bounds;
         float boundsSize = Mathf.Max(veinBounds.size.x, veinBounds.size.y);
         
         if (showDebugInfo)
         {
-            Debug.Log($"  - Testing {vein.name} with bounds: {veinBounds.min} to {veinBounds.max} (size: {boundsSize:F2})");
+            Debug.Log($"    - Collider bounds: {veinBounds.min} to {veinBounds.max} (size: {boundsSize:F2})");
         }
         
-        // If bounds are too small (single point), use fallback
+        // If bounds are too small, skip collider method
         if (boundsSize < 0.1f)
         {
             if (showDebugInfo)
             {
-                Debug.LogWarning($"  - {vein.name} bounds too small ({boundsSize:F2}), using fallback method");
+                Debug.Log($"    - Bounds too small ({boundsSize:F2}), skipping collider method");
             }
-            return FindSpawnPositionNearVein(vein);
+            return Vector2.zero;
         }
         
         // Try multiple random points within the vein's bounds
-        int attempts = 30;
+        int attempts = 50; // Increased attempts
         
         for (int i = 0; i < attempts; i++)
         {
@@ -270,13 +348,7 @@ public class EnemySpawner : MonoBehaviour
             // Check if point is far enough from player
             float distanceFromPlayer = Vector2.Distance(randomPoint, player.position);
             if (distanceFromPlayer < spawnRadius)
-            {
-                if (showDebugInfo && i == 0)
-                {
-                    Debug.Log($"  - Point too close to player (distance: {distanceFromPlayer:F1}, required: {spawnRadius})");
-                }
                 continue;
-            }
                 
             // Check if point is actually within the vein collider
             if (veinCollider.OverlapPoint(randomPoint))
@@ -286,34 +358,63 @@ public class EnemySpawner : MonoBehaviour
                 {
                     if (showDebugInfo)
                     {
-                        Debug.Log($"  - Found valid spawn point on {vein.name} at {randomPoint} (distance from player: {distanceFromPlayer:F1})");
+                        Debug.Log($"    - Found collider-based spawn point on {vein.name} at {randomPoint}");
                     }
                     return randomPoint;
-                }
-                else
-                {
-                    if (showDebugInfo && i == 0)
-                    {
-                        Debug.Log($"  - Position occupied by enemy");
-                    }
-                }
-            }
-            else
-            {
-                if (showDebugInfo && i == 0)
-                {
-                    Debug.Log($"  - Point not within vein collider");
                 }
             }
         }
         
         if (showDebugInfo)
         {
-            Debug.Log($"  - Failed to find spawn position on {vein.name} after {attempts} attempts, trying fallback");
+            Debug.Log($"    - Collider method failed after {attempts} attempts");
+        }
+        return Vector2.zero;
+    }
+    
+    Vector2 TryRendererBasedSpawning(GameObject vein, SpriteRenderer veinRenderer)
+    {
+        Bounds rendererBounds = veinRenderer.bounds;
+        float boundsSize = Mathf.Max(rendererBounds.size.x, rendererBounds.size.y);
+        
+        if (showDebugInfo)
+        {
+            Debug.Log($"    - Renderer bounds: {rendererBounds.min} to {rendererBounds.max} (size: {boundsSize:F2})");
         }
         
-        // Fallback method if collider-based spawning fails
-        return FindSpawnPositionNearVein(vein);
+        // Try multiple random points within the renderer's bounds
+        int attempts = 30;
+        
+        for (int i = 0; i < attempts; i++)
+        {
+            // Generate random point within renderer bounds
+            Vector2 randomPoint = new Vector2(
+                Random.Range(rendererBounds.min.x, rendererBounds.max.x),
+                Random.Range(rendererBounds.min.y, rendererBounds.max.y)
+            );
+            
+            // Check if point is far enough from player
+            float distanceFromPlayer = Vector2.Distance(randomPoint, player.position);
+            if (distanceFromPlayer < spawnRadius)
+                continue;
+                
+            // For renderer-based, we assume any point in bounds is valid
+            // Check if position is clear of other enemies
+            if (IsPositionClear(randomPoint))
+            {
+                if (showDebugInfo)
+                {
+                    Debug.Log($"    - Found renderer-based spawn point on {vein.name} at {randomPoint}");
+                }
+                return randomPoint;
+            }
+        }
+        
+        if (showDebugInfo)
+        {
+            Debug.Log($"    - Renderer method failed after {attempts} attempts");
+        }
+        return Vector2.zero;
     }
     
     Vector2 FindSpawnPositionNearVein(GameObject vein)
@@ -420,7 +521,40 @@ public class EnemySpawner : MonoBehaviour
     {
         // Instantiate new enemy
         GameObject newEnemy = Instantiate(enemyPrefab, position, Quaternion.identity);
-        Debug.Log($"EnemySpawner: Spawned new enemy at {position}. Total enemies: {currentEnemyCount + 1}");
+        
+        // Ensure the enemy is properly activated and moving
+        if (newEnemy != null)
+        {
+            newEnemy.SetActive(true);
+            
+            // Get the enemy pathfinder component and ensure it's working
+            enemy_pathfinder pathfinder = newEnemy.GetComponent<enemy_pathfinder>();
+            if (pathfinder != null)
+            {
+                // Force the enemy to start moving by calling its initialization
+                if (showDebugInfo)
+                {
+                    Debug.Log($"EnemySpawner: Enemy spawned with pathfinder component at {position}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"EnemySpawner: Spawned enemy at {position} but no enemy_pathfinder component found!");
+            }
+            
+            // Ensure rigidbody is properly configured
+            Rigidbody2D enemyRb = newEnemy.GetComponent<Rigidbody2D>();
+            if (enemyRb != null)
+            {
+                enemyRb.linearVelocity = Vector2.zero; // Reset velocity
+                enemyRb.angularVelocity = 0f; // Reset angular velocity
+            }
+        }
+        
+        if (showDebugInfo)
+        {
+            Debug.Log($"EnemySpawner: Spawned new enemy at {position}. Total enemies: {currentEnemyCount + 1}");
+        }
     }
     
     // Debug visualization
