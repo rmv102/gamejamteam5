@@ -19,6 +19,10 @@ public class PlayerMovement : MonoBehaviour
     public float dashMaxForce = 200f; // Higher max force for dashing
     public bool useVelocityDuringDash = true; // Use direct velocity control during dash for more reliable movement
     
+    [Header("Audio")]
+    public AudioSource dashAudioSource; // Reference to AudioSource for dash sound
+    public AudioClip dashSound; // Dash sound effect clip
+    
     [Header("Dash Settings")]
     public float dashSpeed = 20f;
     public float dashDuration = 0.3f;
@@ -61,6 +65,9 @@ public class PlayerMovement : MonoBehaviour
         currentDashes = maxDashes;
         Debug.Log($"Player initialized with {currentDashes} dashes (max: {maxDashes})");
         
+        // Setup audio
+        SetupAudio();
+        
         // Optimize spring joints for better responsiveness
         if (useForceBasedMovement)
         {
@@ -86,6 +93,38 @@ public class PlayerMovement : MonoBehaviour
         }
         
         Debug.Log($"Optimized {springJoints.Length} spring joints for better responsiveness");
+    }
+    
+    void SetupAudio()
+    {
+        // If no AudioSource is assigned, try to find one or create one
+        if (dashAudioSource == null)
+        {
+            dashAudioSource = GetComponent<AudioSource>();
+            if (dashAudioSource == null)
+            {
+                dashAudioSource = gameObject.AddComponent<AudioSource>();
+                Debug.Log("Added AudioSource component to player for dash sound");
+            }
+        }
+        
+        // Configure AudioSource for sound effects
+        dashAudioSource.playOnAwake = false;
+        dashAudioSource.loop = false;
+        dashAudioSource.volume = 1f;
+        dashAudioSource.pitch = 1f;
+        dashAudioSource.spatialBlend = 0f; // 2D sound (not 3D)
+        
+        // Assign the dash sound clip if available
+        if (dashSound != null)
+        {
+            dashAudioSource.clip = dashSound;
+            Debug.Log("Dash sound assigned successfully");
+        }
+        else
+        {
+            Debug.LogWarning("No dash sound clip assigned! Please drag the dash_sound.mp3 to the Dash Sound field in the Inspector.");
+        }
     }
 
     // Update is called once per frame
@@ -279,11 +318,28 @@ public class PlayerMovement : MonoBehaviour
             dashCooldownTimer = dashCooldown;
             currentDashes--; // Consume a dash
             
+            // Play dash sound effect
+            PlayDashSound();
+            
             Debug.Log($"Player started dash in direction: {dashDirection}, remaining dashes: {currentDashes}");
         }
         else
         {
             Debug.Log("Cannot dash: No dashes available");
+        }
+    }
+    
+    void PlayDashSound()
+    {
+        if (dashAudioSource != null && dashSound != null)
+        {
+            dashAudioSource.Play();
+            Debug.Log("Dash sound played!");
+        }
+        else
+        {
+            if (dashAudioSource == null) Debug.LogWarning("Dash AudioSource is null!");
+            if (dashSound == null) Debug.LogWarning("Dash sound clip is null!");
         }
     }
 
