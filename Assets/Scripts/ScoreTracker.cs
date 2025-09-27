@@ -6,7 +6,7 @@ public class ScoreTracker : MonoBehaviour
     [SerializeField] Image progressBar;      // Image Type = Filled
     [SerializeField] Text feedbackText;
     public string particleTag = "InfectedParticle";
-    public int maxParticles = 100; // your cap
+    public int maxParticles = 300; // your cap
 
     void Update()
     {
@@ -17,15 +17,15 @@ public class ScoreTracker : MonoBehaviour
         int percent = Mathf.RoundToInt(percentGenerated * 100f);
 
         if (percent <= 20)
-            feedbackText.text = "Healthy";
+            feedbackText.text = "Status: Healthy";
         else if (percent <= 40)
-            feedbackText.text = "Minor Infection";
+            feedbackText.text = "Status: Minor Infection";
         else if (percent <= 60)
-            feedbackText.text = "Spreading Infection";
+            feedbackText.text = "Status: Spreading Infection";
         else if (percent <= 80)
-            feedbackText.text = "Severe Infection";
+            feedbackText.text = "Status: Severe Infection";
         else
-            feedbackText.text = "Fully Infected!";
+            feedbackText.text = "Status: Fully Infected!";
     }
 
 }

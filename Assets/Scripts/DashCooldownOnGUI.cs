@@ -5,18 +5,19 @@ public class DashCooldownOnGUI : MonoBehaviour
     [Header("Visual Settings")]
     [SerializeField] private bool showCooldownBar = true;
     [SerializeField] private bool showCooldownText = true;
-    [SerializeField] private bool showDashIndicator = true;
     
     [Header("Position & Size")]
-    [SerializeField] private Vector2 barPosition = new Vector2(20, 20);
     [SerializeField] private Vector2 barSize = new Vector2(200, 20);
-    [SerializeField] private Vector2 textPosition = new Vector2(20, 50);
+    [SerializeField] private float margin = 20f; // Distance from screen edges
+    
+    [Header("Font Settings")]
+    [SerializeField] private Font customFont; // Font that can be assigned in Unity Inspector
+    [SerializeField] private int fontSize = 16;
     
     [Header("Colors")]
-    [SerializeField] private Color readyColor = Color.green;
-    [SerializeField] private Color cooldownColor = Color.red;
-    [SerializeField] private Color chargingColor = Color.yellow;
-    [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.5f);
+    [SerializeField] private Color barColor = Color.white;
+    [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.3f);
+    [SerializeField] private Color textColor = Color.white;
     
     private PlayerMovement playerMovement;
     private GUIStyle textStyle;
@@ -35,9 +36,15 @@ public class DashCooldownOnGUI : MonoBehaviour
         
         // Initialize GUI styles
         textStyle = new GUIStyle();
-        textStyle.fontSize = 16;
+        textStyle.fontSize = fontSize;
         textStyle.fontStyle = FontStyle.Bold;
-        textStyle.normal.textColor = Color.white;
+        textStyle.normal.textColor = textColor;
+        
+        // Apply custom font if assigned
+        if (customFont != null)
+        {
+            textStyle.font = customFont;
+        }
         
         barStyle = new GUIStyle();
     }
@@ -54,97 +61,65 @@ public class DashCooldownOnGUI : MonoBehaviour
         // Calculate cooldown progress
         float cooldownProgress = cooldownTotal > 0 ? (cooldownTotal - cooldownRemaining) / cooldownTotal : 0f;
         
+        // Calculate position for bottom right corner
+        float barX = Screen.width - barSize.x - margin;
+        float barY = Screen.height - barSize.y - margin;
+        Vector2 barPosition = new Vector2(barX, barY);
+        
         // Draw cooldown bar
         if (showCooldownBar)
         {
-            DrawCooldownBar(cooldownProgress, isDashing);
+            DrawCooldownBar(barPosition, cooldownProgress, isDashing);
         }
         
         // Draw cooldown text
         if (showCooldownText)
         {
-            DrawCooldownText(cooldownRemaining, isDashing);
-        }
-        
-        // Draw dash indicator
-        if (showDashIndicator)
-        {
-            DrawDashIndicator(isDashing);
+            DrawCooldownText(barPosition, cooldownRemaining, isDashing);
         }
     }
     
-    void DrawCooldownBar(float progress, bool isDashing)
+    void DrawCooldownBar(Vector2 position, float progress, bool isDashing)
     {
         // Background
-        Rect backgroundRect = new Rect(barPosition.x, barPosition.y, barSize.x, barSize.y);
+        Rect backgroundRect = new Rect(position.x, position.y, barSize.x, barSize.y);
         GUI.color = backgroundColor;
         GUI.DrawTexture(backgroundRect, Texture2D.whiteTexture);
         
-        // Progress fill
-        Rect fillRect = new Rect(barPosition.x, barPosition.y, barSize.x * progress, barSize.y);
-        
-        if (isDashing)
-        {
-            GUI.color = chargingColor;
-        }
-        else if (progress >= 1f)
-        {
-            GUI.color = readyColor;
-        }
-        else
-        {
-            GUI.color = cooldownColor;
-        }
-        
+        // Progress fill - always white
+        Rect fillRect = new Rect(position.x, position.y, barSize.x * progress, barSize.y);
+        GUI.color = barColor;
         GUI.DrawTexture(fillRect, Texture2D.whiteTexture);
-        
-        // Border
-        GUI.color = Color.white;
-        GUI.DrawTexture(backgroundRect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, Color.white, 2, 2);
         
         // Reset color
         GUI.color = Color.white;
     }
     
-    void DrawCooldownText(float remaining, bool isDashing)
+    void DrawCooldownText(Vector2 barPosition, float remaining, bool isDashing)
     {
         string text;
-        Color textColor = Color.white;
         
         if (isDashing)
         {
             text = "DASHING!";
-            textColor = chargingColor;
         }
         else if (remaining <= 0f)
         {
             text = "DASH READY";
-            textColor = readyColor;
         }
         else
         {
             text = $"DASH: {remaining:F1}s";
-            textColor = cooldownColor;
         }
         
+        // Position text above the bar
+        float textX = barPosition.x;
+        float textY = barPosition.y - 25f; // 25 pixels above the bar
+        
         textStyle.normal.textColor = textColor;
-        GUI.Label(new Rect(textPosition.x, textPosition.y, 200, 30), text, textStyle);
+        GUI.Label(new Rect(textX, textY, barSize.x, 30), text, textStyle);
     }
     
-    void DrawDashIndicator(bool isDashing)
-    {
-        if (isDashing)
-        {
-            // Draw a pulsing indicator when dashing
-            float pulse = Mathf.Sin(Time.time * 10f) * 0.5f + 0.5f;
-            GUI.color = new Color(chargingColor.r, chargingColor.g, chargingColor.b, pulse);
-            
-            Rect indicatorRect = new Rect(Screen.width - 50, 20, 30, 30);
-            GUI.DrawTexture(indicatorRect, Texture2D.whiteTexture);
-            
-            GUI.color = Color.white;
-        }
-    }
     
     float GetDashCooldownRemaining()
     {
