@@ -3202,6 +3202,55 @@ PolygonCollider2D:
       - {x: 0.26193714, y: -0.23423576}
       - {x: 0.8723974, y: 0.036024034}
   m_UseDelaunayMesh: 0
+--- !u!1 &1299567461
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1299567463}
+  - component: {fileID: 1299567462}
+  m_Layer: 0
+  m_Name: BGM
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1299567462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299567461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8ccab1740cb4a6428a39ced3a3fc063, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BackgroundMusicManager
+  backgroundMusic: {fileID: 8300000, guid: 1a2a20a8f9841294f8136fba33eb4954, type: 3}
+  musicVolume: 0.5
+  playOnStart: 1
+  loopMusic: 1
+  createAudioSource: 1
+--- !u!4 &1299567463
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299567461}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.29073, y: -34.3214, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1312162307 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5719609615090004801, guid: 5be0be456d911fa4ca56a92669263dab, type: 3}
@@ -7259,3 +7308,4 @@ SceneRoots:
   - {fileID: 1560428923}
   - {fileID: 869150822}
   - {fileID: 1591841435}
+  - {fileID: 1299567463}
