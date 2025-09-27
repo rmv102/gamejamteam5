@@ -1825,9 +1825,9 @@ GameObject:
   - component: {fileID: 793920449}
   - component: {fileID: 793920448}
   - component: {fileID: 793920447}
-  - component: {fileID: 793920452}
+  - component: {fileID: 793920453}
   m_Layer: 0
-  m_Name: Circle
+  m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1987,7 +1987,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &793920452
+--- !u!114 &793920453
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1996,10 +1996,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 793920446}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d84a976936615f84db2b4f67062cdbf9, type: 3}
+  m_Script: {fileID: 11500000, guid: a70b02b778acf03479bf5ff72714bac6, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VirusInfection
-  infectedColor: {r: 0, g: 1, b: 0, a: 1}
+  m_EditorClassIdentifier: Assembly-CSharp::InfectedParticleDropper
+  particlePrefab: {fileID: 5064948860932274619, guid: d9e51fc7af0c9cd40a2bc9d3b130e037, type: 3}
+  dropDistance: 1
+  clearanceRadius: 2
+  particleLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &819213259
 GameObject:
   m_ObjectHideFlags: 0
@@ -4541,6 +4546,18 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 932806912279295133, guid: ad8dcc2922371004db977fd0348f97f2, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 932806912279295133, guid: ad8dcc2922371004db977fd0348f97f2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 932806912279295133, guid: ad8dcc2922371004db977fd0348f97f2, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.3388503
+      objectReference: {fileID: 0}
+    - target: {fileID: 932806912279295133, guid: ad8dcc2922371004db977fd0348f97f2, type: 3}
       propertyPath: m_LocalPosition.x
       value: -13.7
       objectReference: {fileID: 0}
@@ -4578,6 +4595,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 932806912279295133, guid: ad8dcc2922371004db977fd0348f97f2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 932806912279295133, guid: ad8dcc2922371004db977fd0348f97f2, type: 3}
+      propertyPath: m_ConstrainProportionsScale
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6441724896865601564, guid: ad8dcc2922371004db977fd0348f97f2, type: 3}
