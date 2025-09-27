@@ -7,7 +7,7 @@ public class Timer : MonoBehaviour
     public Text gameOverText; // Assign in Inspector (the overlay message)
     private bool gameOverShown = false;
     public Text timerText; // Assign this in the Inspector
-    private float remainingTime = 20f; // 2 minutes in seconds
+    public float remainingTime = 20f; // 2 minutes in seconds
     private bool timerActive = true;
 
     void Update()

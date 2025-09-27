@@ -2686,9 +2686,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1321978849559456432, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
+      propertyPath: remainingTime
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 1834948228647550786, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
       propertyPath: m_Name
       value: GameManageUI
+      objectReference: {fileID: 0}
+    - target: {fileID: 2829077912397423921, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
+      propertyPath: maxParticles
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 5825447356185717046, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
       propertyPath: m_Pivot.x
