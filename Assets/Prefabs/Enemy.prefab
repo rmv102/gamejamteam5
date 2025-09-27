@@ -168,7 +168,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71e3dfba192359d4a9f7fc606cd43418, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::enemy_pathfinder
-  moveSpeed: 1.5
+  moveSpeed: 4
   detectionRange: 10
   stoppingDistance: 1
   pathUpdateInterval: 0.5
@@ -185,3 +185,7 @@ MonoBehaviour:
   borderLayer:
     serializedVersion: 2
     m_Bits: 4294967295
+  particleDetectionRange: 15
+  infectedParticleTag: InfectedParticle
+  particlePriorityMultiplier: 3
+  particleStoppingDistance: 0.1
