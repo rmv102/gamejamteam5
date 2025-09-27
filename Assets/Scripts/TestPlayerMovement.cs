@@ -9,6 +9,16 @@ public class PlayerMovement : MonoBehaviour
     public float acceleration = 20f;
     public float deceleration = 15f;
     
+    [Header("Softbody Settings")]
+    public float forceMultiplier = 2f; // Multiplier for forces applied to softbody
+    public float maxForce = 50f; // Maximum force that can be applied
+    public bool useForceBasedMovement = true; // Toggle between force-based and velocity-based movement
+    
+    [Header("Dash Force Settings")]
+    public float dashForceMultiplier = 5f; // Extra multiplier specifically for dash forces
+    public float dashMaxForce = 200f; // Higher max force for dashing
+    public bool useVelocityDuringDash = true; // Use direct velocity control during dash for more reliable movement
+    
     [Header("Dash Settings")]
     public float dashSpeed = 20f;
     public float dashDuration = 0.3f;
@@ -18,6 +28,7 @@ public class PlayerMovement : MonoBehaviour
     
     private Rigidbody2D rb;
     private Vector2 moveInput;
+    private Vector2 lastMoveInput; // Store last movement direction for dashing
     private Vector2 dashDirection;
     private bool isDashing = false;
     private float dashTimer = 0f;
@@ -34,15 +45,47 @@ public class PlayerMovement : MonoBehaviour
         if (rb != null)
         {
             rb.gravityScale = 0f; // No gravity for 2D top-down movement
-            rb.linearDamping = 0f; // No air resistance
+            rb.linearDamping = useForceBasedMovement ? 0.5f : 0f; // Small damping for softbody to prevent oscillation
             rb.angularDamping = 0f; // No rotation damping
             rb.freezeRotation = true; // Prevent rotation
             rb.interpolation = RigidbodyInterpolation2D.Interpolate; // Smooth interpolation
+            
+            // For softbody: slightly higher mass for more stable movement
+            if (useForceBasedMovement)
+            {
+                rb.mass = Mathf.Max(rb.mass, 1f); // Ensure minimum mass
+            }
         }
         
         // Initialize dash count
         currentDashes = maxDashes;
         Debug.Log($"Player initialized with {currentDashes} dashes (max: {maxDashes})");
+        
+        // Optimize spring joints for better responsiveness
+        if (useForceBasedMovement)
+        {
+            OptimizeSpringJoints();
+        }
+    }
+    
+    void OptimizeSpringJoints()
+    {
+        // Find and optimize all spring joints for better responsiveness
+        SpringJoint2D[] springJoints = GetComponentsInChildren<SpringJoint2D>();
+        
+        foreach (SpringJoint2D springJoint in springJoints)
+        {
+            // Increase frequency for more responsive movement
+            springJoint.frequency = Mathf.Max(springJoint.frequency, 5f);
+            
+            // Reduce damping ratio to prevent over-damping
+            springJoint.dampingRatio = Mathf.Min(springJoint.dampingRatio, 0.3f);
+            
+            // Enable auto-configure to ensure proper setup
+            springJoint.autoConfigureConnectedAnchor = true;
+        }
+        
+        Debug.Log($"Optimized {springJoints.Length} spring joints for better responsiveness");
     }
 
     // Update is called once per frame
@@ -66,9 +109,20 @@ public class PlayerMovement : MonoBehaviour
         CheckForEnemyClear();
 
         // Check for dash input
-        if (keyboard.spaceKey.wasPressedThisFrame && !isDashing && dashCooldownTimer <= 0f && currentDashes > 0)
+        if (keyboard.spaceKey.wasPressedThisFrame)
         {
-            StartDash();
+            Debug.Log($"Space pressed! isDashing: {isDashing}, dashCooldownTimer: {dashCooldownTimer:F2}, currentDashes: {currentDashes}");
+            
+            if (!isDashing && dashCooldownTimer <= 0f && currentDashes > 0)
+            {
+                StartDash();
+            }
+            else
+            {
+                if (isDashing) Debug.Log("Cannot dash: Already dashing");
+                if (dashCooldownTimer > 0f) Debug.Log($"Cannot dash: On cooldown ({dashCooldownTimer:F2}s remaining)");
+                if (currentDashes <= 0) Debug.Log("Cannot dash: No dashes remaining");
+            }
         }
 
         // Handle dash timer
@@ -108,6 +162,12 @@ public class PlayerMovement : MonoBehaviour
             // Store the input in a Vector2 and normalize it.
             // Normalizing prevents faster diagonal movement.
             moveInput = input.normalized;
+            
+            // Store last movement direction for dashing
+            if (moveInput.magnitude > 0.1f)
+            {
+                lastMoveInput = moveInput;
+            }
         }
     }
 
@@ -119,42 +179,111 @@ public class PlayerMovement : MonoBehaviour
             // Apply dash velocity with smooth deceleration
             float dashProgress = 1f - (dashTimer / dashDuration);
             float currentDashSpeed = Mathf.Lerp(dashSpeed, 0f, dashProgress * dashProgress); // Quadratic easing for smooth deceleration
-            rb.linearVelocity = dashDirection * currentDashSpeed;
+            
+            if (useForceBasedMovement && !useVelocityDuringDash)
+            {
+                // For softbody: apply much stronger force for dashing
+                Vector2 dashForce = dashDirection * currentDashSpeed * forceMultiplier * dashForceMultiplier;
+                dashForce = Vector2.ClampMagnitude(dashForce, dashMaxForce);
+                rb.AddForce(dashForce, ForceMode2D.Force);
+                
+                // Also apply impulse for immediate response
+                Vector2 impulseForce = dashDirection * currentDashSpeed * 0.5f;
+                rb.AddForce(impulseForce, ForceMode2D.Impulse);
+                
+                // Debug logging for dash forces
+                if (Time.frameCount % 10 == 0) // Log every 10 frames during dash
+                {
+                    Debug.Log($"Dash forces - Direction: {dashDirection}, Speed: {currentDashSpeed:F1}, Force: {dashForce.magnitude:F1}, Impulse: {impulseForce.magnitude:F1}, Velocity: {rb.linearVelocity.magnitude:F1}");
+                }
+            }
+            else
+            {
+                // Direct velocity control for more reliable dashing
+                rb.linearVelocity = dashDirection * currentDashSpeed;
+                
+                // Debug logging for dash velocity
+                if (Time.frameCount % 10 == 0) // Log every 10 frames during dash
+                {
+                    Debug.Log($"Dash velocity - Direction: {dashDirection}, Speed: {currentDashSpeed:F1}, Velocity: {rb.linearVelocity.magnitude:F1}");
+                }
+            }
             
             // Check for enemies during dash (backup method)
             CheckForEnemiesDuringDash();
         }
         else
         {
-            // Apply smooth acceleration/deceleration for normal movement
-            Vector2 targetVelocity = moveInput * speed;
-            Vector2 currentVelocity = rb.linearVelocity;
-            
-            if (moveInput.magnitude > 0.1f)
+            if (useForceBasedMovement)
             {
-                // Accelerate towards target velocity
-                rb.linearVelocity = Vector2.MoveTowards(currentVelocity, targetVelocity, acceleration * Time.fixedDeltaTime);
+                // Force-based movement for softbody physics
+                Vector2 targetVelocity = moveInput * speed;
+                Vector2 currentVelocity = rb.linearVelocity;
+                Vector2 velocityDifference = targetVelocity - currentVelocity;
+                
+                if (moveInput.magnitude > 0.1f)
+                {
+                    // Apply force to accelerate towards target velocity
+                    Vector2 force = velocityDifference * acceleration * forceMultiplier;
+                    force = Vector2.ClampMagnitude(force, maxForce);
+                    rb.AddForce(force, ForceMode2D.Force);
+                }
+                else
+                {
+                    // Apply force to decelerate to zero
+                    Vector2 force = -currentVelocity * deceleration * forceMultiplier;
+                    force = Vector2.ClampMagnitude(force, maxForce);
+                    rb.AddForce(force, ForceMode2D.Force);
+                }
             }
             else
             {
-                // Decelerate to zero when no input
-                rb.linearVelocity = Vector2.MoveTowards(currentVelocity, Vector2.zero, deceleration * Time.fixedDeltaTime);
+                // Original velocity-based movement
+                Vector2 targetVelocity = moveInput * speed;
+                Vector2 currentVelocity = rb.linearVelocity;
+                
+                if (moveInput.magnitude > 0.1f)
+                {
+                    // Accelerate towards target velocity
+                    rb.linearVelocity = Vector2.MoveTowards(currentVelocity, targetVelocity, acceleration * Time.fixedDeltaTime);
+                }
+                else
+                {
+                    // Decelerate to zero when no input
+                    rb.linearVelocity = Vector2.MoveTowards(currentVelocity, Vector2.zero, deceleration * Time.fixedDeltaTime);
+                }
             }
         }
     }
 
     void StartDash()
     {
-        // Only dash if we have a movement direction and dashes available
-        if (moveInput.magnitude > 0.1f && currentDashes > 0)
+        Debug.Log($"StartDash called! moveInput.magnitude: {moveInput.magnitude:F2}, lastMoveInput.magnitude: {lastMoveInput.magnitude:F2}, currentDashes: {currentDashes}");
+        
+        // Only dash if we have dashes available
+        if (currentDashes > 0)
         {
+            // Use current movement direction, or last movement direction if not currently moving
+            Vector2 dashDir = moveInput.magnitude > 0.1f ? moveInput.normalized : lastMoveInput.normalized;
+            
+            // If we have no movement direction at all, dash forward (up)
+            if (dashDir.magnitude < 0.1f)
+            {
+                dashDir = Vector2.up;
+                Debug.Log("No movement direction found, dashing forward (up)");
+            }
+            
             isDashing = true;
             dashTimer = dashDuration;
-            dashDirection = moveInput.normalized;
+            dashDirection = dashDir;
             dashCooldownTimer = dashCooldown;
             currentDashes--; // Consume a dash
             
-            Debug.Log($"Player started dash in direction: {dashDirection}");
+            Debug.Log($"Player started dash in direction: {dashDirection}, remaining dashes: {currentDashes}");
+        }
+        else
+        {
+            Debug.Log("Cannot dash: No dashes available");
         }
     }
 

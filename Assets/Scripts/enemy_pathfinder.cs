@@ -1,110 +1,5 @@
 using UnityEngine;
 
-// Simple spawn manager class
-public class EnemySpawnManager : MonoBehaviour
-{
-    public GameObject enemyPrefab;
-    public int maxEnemies = 5;
-    public float spawnRadius = 15f;
-    public float spawnInterval = 3f;
-    public LayerMask veinLayer = ~0;
-    
-    private Transform player;
-    private float lastSpawnTime;
-    private int currentEnemyCount = 0;
-    
-    void Start()
-    {
-        // Find the player
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj == null)
-        {
-            playerObj = GameObject.Find("Circle");
-        }
-        if (playerObj != null)
-        {
-            player = playerObj.transform;
-        }
-        
-        lastSpawnTime = Time.time;
-    }
-    
-    void Update()
-    {
-        // Only spawn if we have an enemy prefab and player
-        if (enemyPrefab == null || player == null) return;
-        
-        // Count current enemies
-        currentEnemyCount = FindObjectsOfType<enemy_pathfinder>().Length;
-        
-        // Try to spawn if under limit and enough time has passed
-        if (currentEnemyCount < maxEnemies && Time.time - lastSpawnTime >= spawnInterval)
-        {
-            Vector2 spawnPosition = FindSpawnPosition();
-            if (spawnPosition != Vector2.zero)
-            {
-                SpawnEnemy(spawnPosition);
-                lastSpawnTime = Time.time;
-            }
-        }
-    }
-    
-    Vector2 FindSpawnPosition()
-    {
-        int maxAttempts = 20;
-        for (int i = 0; i < maxAttempts; i++)
-        {
-            // Generate random position around the player
-            Vector2 randomDirection = Random.insideUnitCircle.normalized;
-            float randomDistance = Random.Range(spawnRadius, spawnRadius * 1.5f);
-            Vector2 candidatePosition = (Vector2)player.position + randomDirection * randomDistance;
-            
-            // Check if position is far enough from player
-            if (Vector2.Distance(candidatePosition, player.position) < spawnRadius)
-                continue;
-                
-            // Check if position is on a vein (natural area)
-            if (IsPositionOnVein(candidatePosition))
-            {
-                // Check if position is clear of other enemies
-                if (IsPositionClear(candidatePosition))
-                {
-                    return candidatePosition;
-                }
-            }
-        }
-        
-        return Vector2.zero; // No valid spawn position found
-    }
-    
-    bool IsPositionOnVein(Vector2 position)
-    {
-        // Check if position is on a vein using raycast
-        RaycastHit2D hit = Physics2D.Raycast(position, Vector2.zero, 0f, veinLayer);
-        return hit.collider != null;
-    }
-    
-    bool IsPositionClear(Vector2 position)
-    {
-        // Check if position is clear of other enemies
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(position, 2f);
-        foreach (Collider2D col in colliders)
-        {
-            if (col.GetComponent<enemy_pathfinder>() != null)
-            {
-                return false; // Position is occupied by another enemy
-            }
-        }
-        return true;
-    }
-    
-    void SpawnEnemy(Vector2 position)
-    {
-        // Instantiate new enemy
-        GameObject newEnemy = Instantiate(enemyPrefab, position, Quaternion.identity);
-        Debug.Log($"Spawn Manager spawned new enemy at {position}. Total enemies: {currentEnemyCount + 1}");
-    }
-}
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(CircleCollider2D))]
@@ -137,15 +32,6 @@ public class enemy_pathfinder : MonoBehaviour
     [SerializeField] float particlePriorityMultiplier = 3f; // How much more important particles are
     [SerializeField] float particleStoppingDistance = 0.1f; // Very small stopping distance for particles
     
-    [Header("Enemy Spawning")]
-    [SerializeField] GameObject enemyPrefab; // Reference to enemy prefab
-    [SerializeField] int maxEnemies = 5; // Maximum number of enemies in scene
-    [SerializeField] float spawnRadius = 15f; // Minimum distance from player to spawn
-    [SerializeField] float spawnInterval = 3f; // Time between spawn attempts
-    [SerializeField] LayerMask veinLayer = ~0; // Layer containing vein objects
-    
-    // Static spawn manager
-    private static EnemySpawnManager spawnManager;
     
     private Transform player;
     private Rigidbody2D rb;
@@ -164,9 +50,6 @@ public class enemy_pathfinder : MonoBehaviour
     private Transform currentTarget;
     private bool isTargetingParticle = false;
     
-    // Spawning variables
-    private float lastSpawnTime;
-    private static int totalEnemies = 0; // Static to track total enemies across all instances
     
     void Start()
     {
@@ -204,21 +87,7 @@ public class enemy_pathfinder : MonoBehaviour
         lastPosition = transform.position;
         lastVelocity = Vector2.zero;
         
-        // Initialize spawning
-        lastSpawnTime = Time.time;
-        totalEnemies++; // Increment total enemy count
         
-        // Initialize spawn manager if it doesn't exist
-        if (spawnManager == null)
-        {
-            GameObject spawnManagerObj = new GameObject("EnemySpawnManager");
-            spawnManager = spawnManagerObj.AddComponent<EnemySpawnManager>();
-            spawnManager.enemyPrefab = enemyPrefab;
-            spawnManager.maxEnemies = maxEnemies;
-            spawnManager.spawnRadius = spawnRadius;
-            spawnManager.spawnInterval = spawnInterval;
-            spawnManager.veinLayer = veinLayer;
-        }
     }
     
     void Update()
@@ -440,8 +309,6 @@ public class enemy_pathfinder : MonoBehaviour
     // Called when enemy is destroyed
     void OnDestroy()
     {
-        totalEnemies--;
-        totalEnemies = Mathf.Max(0, totalEnemies); // Prevent negative count
     }
     
     void GetUnstuck()

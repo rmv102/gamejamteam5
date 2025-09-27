@@ -1902,6 +1902,7 @@ MonoBehaviour:
   maxEnemies: 5
   spawnRadius: 15
   spawnInterval: 3
+  spawnIntervalRandomness: 1
   veinLayer:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -2943,6 +2944,18 @@ PrefabInstance:
     - target: {fileID: 5719609615090004801, guid: 5be0be456d911fa4ca56a92669263dab, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5845137480572029024, guid: 5be0be456d911fa4ca56a92669263dab, type: 3}
+      propertyPath: dashSpeed
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 5845137480572029024, guid: 5be0be456d911fa4ca56a92669263dab, type: 3}
+      propertyPath: maxDashes
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5845137480572029024, guid: 5be0be456d911fa4ca56a92669263dab, type: 3}
+      propertyPath: acceleration
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 6660295094036465797, guid: 5be0be456d911fa4ca56a92669263dab, type: 3}
       propertyPath: m_Distance
