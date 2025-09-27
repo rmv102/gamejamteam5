@@ -25,12 +25,6 @@ public class enemy_pathfinder : MonoBehaviour
     [SerializeField] float borderPushForce = 5f;
     [SerializeField] LayerMask borderLayer = ~0;
     
-    [Header("Target Priority")]
-    [SerializeField] float particleDetectionRange = 15f; // Increased range for better particle detection
-    [SerializeField] string infectedParticleTag = "InfectedParticle";
-    [SerializeField] float particlePriorityMultiplier = 3f; // How much more important particles are
-    [SerializeField] float particleStoppingDistance = 0.1f; // Very small stopping distance for particles
-    
     private Transform player;
     private Rigidbody2D rb;
     private Vector2 targetPosition;
@@ -43,10 +37,6 @@ public class enemy_pathfinder : MonoBehaviour
     private float stuckTimer;
     private Vector2 lastVelocity;
     private int stuckDirection = 1;
-    
-    // Target tracking
-    private Transform currentTarget;
-    private bool isTargetingParticle = false;
     
     void Start()
     {
@@ -93,29 +83,14 @@ public class enemy_pathfinder : MonoBehaviour
             return;
         }
         
-        // Find the best target (player or infected particle)
-        FindBestTarget();
-        
-        // If there are particles in the scene, be more aggressive about finding them
-        if (AreThereAnyParticles() && currentTarget == null)
-        {
-            // Increase detection range temporarily when particles exist but none are in range
-            float originalRange = particleDetectionRange;
-            particleDetectionRange = originalRange * 1.5f; // 50% increase
-            
-            // Try to find particles again with extended range
-            FindBestTarget();
-            
-            // Restore original range
-            particleDetectionRange = originalRange;
-        }
+        // Check if player is within detection range
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        isFollowingPlayer = distanceToPlayer <= detectionRange;
         
         if (isFollowingPlayer)
         {
-            // Update path more frequently when targeting particles
-            float updateInterval = isTargetingParticle ? pathUpdateInterval * 0.5f : pathUpdateInterval;
-            
-            if (Time.time - lastPathUpdate >= updateInterval)
+            // Update path periodically
+            if (Time.time - lastPathUpdate >= pathUpdateInterval)
             {
                 UpdatePath();
                 lastPathUpdate = Time.time;
@@ -132,17 +107,8 @@ public class enemy_pathfinder : MonoBehaviour
         }
         else
         {
-            // If there are particles but we're not following, try to find them
-            if (AreThereAnyParticles())
-            {
-                // Move randomly to search for particles
-                SearchForParticles();
-            }
-            else
-            {
-                // Stop moving if no targets are in range
-                StopMoving();
-            }
+            // Stop moving if player is too far
+            StopMoving();
         }
     }
     
@@ -215,91 +181,6 @@ public class enemy_pathfinder : MonoBehaviour
         }
     }
     
-    void FindBestTarget()
-    {
-        if (player == null) return;
-        
-        Transform bestTarget = null;
-        float bestScore = float.MaxValue;
-        bool targetingParticle = false;
-        
-        // FIRST PRIORITY: Look for infected particles within detection range
-        GameObject[] particles = GameObject.FindGameObjectsWithTag(infectedParticleTag);
-        
-        foreach (GameObject particle in particles)
-        {
-            if (particle == null) continue; // Skip destroyed particles
-            
-            float distanceToParticle = Vector2.Distance(transform.position, particle.transform.position);
-            
-            // Check if particle is within detection range
-            if (distanceToParticle <= particleDetectionRange)
-            {
-                // Calculate priority score (lower is better)
-                // Particles get massive priority boost - even far particles are prioritized
-                float particleScore = distanceToParticle / particlePriorityMultiplier;
-                
-                if (particleScore < bestScore)
-                {
-                    bestTarget = particle.transform;
-                    bestScore = particleScore;
-                    targetingParticle = true;
-                }
-            }
-        }
-        
-        // If we found a particle, ALWAYS prioritize it over player
-        if (bestTarget != null && targetingParticle)
-        {
-            currentTarget = bestTarget;
-            isTargetingParticle = true;
-            isFollowingPlayer = true;
-            return;
-        }
-        
-        // SECOND PRIORITY: Only target player if NO particles are found at all
-        if (bestTarget == null)
-        {
-            float playerDistance = Vector2.Distance(transform.position, player.position);
-            if (playerDistance <= detectionRange)
-            {
-                bestTarget = player;
-                bestScore = playerDistance;
-                targetingParticle = false;
-            }
-        }
-        
-        // Update current target
-        currentTarget = bestTarget;
-        isTargetingParticle = targetingParticle;
-        
-        // Update following status - only follow if we have a target
-        isFollowingPlayer = currentTarget != null;
-    }
-    
-    // Method to check if there are any particles in the scene at all
-    bool AreThereAnyParticles()
-    {
-        GameObject[] particles = GameObject.FindGameObjectsWithTag(infectedParticleTag);
-        return particles.Length > 0;
-    }
-    
-    void SearchForParticles()
-    {
-        // Move in a random direction to search for particles
-        Vector2 randomDirection = new Vector2(
-            Random.Range(-1f, 1f), 
-            Random.Range(-1f, 1f)
-        ).normalized;
-        
-        // Apply search movement
-        Vector2 searchVelocity = randomDirection * moveSpeed * 0.5f; // Slower search speed
-        currentVelocity = Vector2.MoveTowards(currentVelocity, searchVelocity, acceleration * Time.deltaTime);
-        rb.linearVelocity = currentVelocity;
-        
-        Debug.Log($"Enemy {gameObject.name} searching for particles...");
-    }
-    
     void GetUnstuck()
     {
         // Try to move in a random direction to get unstuck
@@ -323,43 +204,40 @@ public class enemy_pathfinder : MonoBehaviour
     
     void UpdatePath()
     {
-        if (currentTarget == null) return;
+        if (player == null) return;
         
-        Vector2 directionToTarget = (currentTarget.position - transform.position).normalized;
-        float distanceToTarget = Vector2.Distance(transform.position, currentTarget.position);
+        Vector2 directionToPlayer = (player.position - transform.position).normalized;
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         
-        // Use different stopping distances for particles vs player
-        float effectiveStoppingDistance = isTargetingParticle ? particleStoppingDistance : stoppingDistance;
-        
-        // If target is close enough, move directly towards them
-        if (distanceToTarget <= effectiveStoppingDistance)
+        // If player is close enough, move directly towards them
+        if (distanceToPlayer <= stoppingDistance)
         {
-            targetPosition = currentTarget.position;
+            targetPosition = player.position;
             return;
         }
         
         // Use raycast to check for obstacles in the direct path
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, directionToTarget, distanceToTarget, obstacleLayer);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, directionToPlayer, distanceToPlayer, obstacleLayer);
         
         if (hit.collider != null)
         {
             // There's an obstacle, try to find a way around it
-            // Test directions in order of preference (closest to target direction first)
+            // Test directions in order of preference (closest to player direction first)
             Vector2[] directions = {
-                directionToTarget, // Always try direct path first
-                new Vector2(directionToTarget.x, 0).normalized, // Horizontal component
-                new Vector2(0, directionToTarget.y).normalized, // Vertical component
-                new Vector2(directionToTarget.y, directionToTarget.x).normalized, // Perpendicular 1
-                new Vector2(-directionToTarget.y, directionToTarget.x).normalized, // Perpendicular 2
+                directionToPlayer, // Always try direct path first
+                new Vector2(directionToPlayer.x, 0).normalized, // Horizontal component
+                new Vector2(0, directionToPlayer.y).normalized, // Vertical component
+                new Vector2(directionToPlayer.y, directionToPlayer.x).normalized, // Perpendicular 1
+                new Vector2(-directionToPlayer.y, directionToPlayer.x).normalized, // Perpendicular 2
                 Vector2.up,
                 Vector2.down,
                 Vector2.left,
                 Vector2.right
             };
             
-            Vector2 bestDirection = directionToTarget;
+            Vector2 bestDirection = directionToPlayer;
             float bestScore = -1f;
-            Vector2 bestTarget = currentTarget.position;
+            Vector2 bestTarget = player.position;
             
             foreach (Vector2 dir in directions)
             {
@@ -372,8 +250,8 @@ public class enemy_pathfinder : MonoBehaviour
                 RaycastHit2D borderHit = Physics2D.Raycast(transform.position, dir, borderAvoidanceDistance, borderLayer);
                 float borderDistance = borderHit.collider != null ? borderHit.distance : borderAvoidanceDistance;
                 
-                // Calculate score: prioritize directions toward target AND clear paths AND away from borders
-                float directionScore = Vector2.Dot(dir, directionToTarget);
+                // Calculate score: prioritize directions toward player AND clear paths AND away from borders
+                float directionScore = Vector2.Dot(dir, directionToPlayer);
                 float clearPathScore = testDistance / detectionRange; // How clear the path is
                 float borderAvoidanceScore = borderDistance / borderAvoidanceDistance; // How far from borders
                 
@@ -389,7 +267,7 @@ public class enemy_pathfinder : MonoBehaviour
                 {
                     bestScore = totalScore;
                     bestDirection = dir;
-                    bestTarget = (Vector2)transform.position + dir * Mathf.Min(testDistance * 0.8f, distanceToTarget);
+                    bestTarget = (Vector2)transform.position + dir * Mathf.Min(testDistance * 0.8f, distanceToPlayer);
                 }
             }
             
@@ -398,65 +276,49 @@ public class enemy_pathfinder : MonoBehaviour
         }
         else
         {
-            // No obstacles, move directly towards target
-            targetPosition = currentTarget.position;
+            // No obstacles, move directly towards player
+            targetPosition = player.position;
         }
     }
     
     void MoveTowardsTarget()
     {
-        if (currentTarget == null) return;
+        if (player == null) return;
         
-        float distanceToTarget = Vector2.Distance(transform.position, currentTarget.position);
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         
-        // Use different stopping distances for particles vs player
-        float effectiveStoppingDistance = isTargetingParticle ? particleStoppingDistance : stoppingDistance;
-        
-        // Don't move if we're close enough to the target
-        if (distanceToTarget <= effectiveStoppingDistance)
+        // Don't move if we're close enough to the player
+        if (distanceToPlayer <= stoppingDistance)
         {
-            // For particles, don't stop - keep moving to ensure collision
-            if (isTargetingParticle)
-            {
-                // Move directly toward the particle to ensure collision
-                Vector2 particleDirection = (currentTarget.position - transform.position).normalized;
-                Vector2 particleVelocity = particleDirection * moveSpeed;
-                currentVelocity = Vector2.MoveTowards(currentVelocity, particleVelocity, acceleration * Time.deltaTime);
-                rb.linearVelocity = currentVelocity;
-                return;
-            }
-            else
-            {
-                StopMoving();
-                return;
-            }
+            StopMoving();
+            return;
         }
         
-        // Calculate direction to current target
-        Vector2 directionToTarget = (currentTarget.position - transform.position).normalized;
-        Vector2 directionToPathfindingTarget = (targetPosition - (Vector2)transform.position).normalized;
-        float distanceToPathfindingTarget = Vector2.Distance(transform.position, targetPosition);
+        // Always prioritize moving directly toward player if possible
+        Vector2 directionToPlayer = (player.position - transform.position).normalized;
+        Vector2 directionToTarget = (targetPosition - (Vector2)transform.position).normalized;
+        float distanceToTarget = Vector2.Distance(transform.position, targetPosition);
         
         Vector2 finalDirection;
         
-        // If we're very close to our pathfinding target, move directly toward current target
-        if (distanceToPathfindingTarget < 0.5f)
+        // If we're very close to our pathfinding target, move directly toward player
+        if (distanceToTarget < 0.5f)
         {
-            finalDirection = directionToTarget;
+            finalDirection = directionToPlayer;
         }
         else
         {
-            // Use pathfinding direction, but ensure it's generally toward the current target
-            float dotProduct = Vector2.Dot(directionToPathfindingTarget, directionToTarget);
+            // Use pathfinding direction, but ensure it's generally toward the player
+            float dotProduct = Vector2.Dot(directionToTarget, directionToPlayer);
             
-            // If the pathfinding direction is too far from target direction, use target direction
-            if (dotProduct < 0.3f) // If angle is more than ~72 degrees from target
+            // If the pathfinding direction is too far from player direction, use player direction
+            if (dotProduct < 0.3f) // If angle is more than ~72 degrees from player
             {
-                finalDirection = directionToTarget;
+                finalDirection = directionToPlayer;
             }
             else
             {
-                finalDirection = directionToPathfindingTarget;
+                finalDirection = directionToTarget;
             }
         }
         
@@ -470,10 +332,7 @@ public class enemy_pathfinder : MonoBehaviour
         rb.linearVelocity = currentVelocity;
         
         // Debug output
-        string targetType = isTargetingParticle ? "PARTICLE (PRIORITY)" : "Player";
-        string priority = isTargetingParticle ? "HIGH" : "LOW";
-        float effectiveStopDist = isTargetingParticle ? particleStoppingDistance : stoppingDistance;
-        Debug.Log($"Enemy {gameObject.name}: Target: {targetType}, Priority: {priority}, Dist: {distanceToTarget:F2}, StopDist: {effectiveStopDist:F2}, Direction: {finalDirection}, Velocity: {currentVelocity.magnitude:F2}");
+        Debug.Log($"Enemy {gameObject.name}: Player dist: {distanceToPlayer:F2}, Target dist: {distanceToTarget:F2}, Direction: {finalDirection}, Velocity: {currentVelocity.magnitude:F2}");
     }
     
     void StopMoving()
@@ -500,22 +359,15 @@ public class enemy_pathfinder : MonoBehaviour
         }
         
         // Draw path to target
-        if (isFollowingPlayer && currentTarget != null)
+        if (isFollowingPlayer && player != null)
         {
             // Draw line to current target (pathfinding target)
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(transform.position, targetPosition);
             
-            // Draw line to current target (player or particle)
-            if (isTargetingParticle)
-            {
-                Gizmos.color = Color.cyan; // Cyan for particles
-            }
-            else
-            {
-                Gizmos.color = Color.green; // Green for player
-            }
-            Gizmos.DrawLine(transform.position, currentTarget.position);
+            // Draw line to player
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(transform.position, player.position);
             
             // Draw stuck indicator
             if (stuckTimer > 0)
@@ -527,10 +379,6 @@ public class enemy_pathfinder : MonoBehaviour
             // Draw border avoidance range
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(transform.position, borderAvoidanceDistance);
-            
-            // Draw particle detection range
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawWireSphere(transform.position, particleDetectionRange);
         }
     }
     
@@ -572,34 +420,6 @@ public class enemy_pathfinder : MonoBehaviour
             Vector2 collisionNormal = collision.contacts[0].normal;
             Vector2 pushForce = collisionNormal * borderPushForce * 0.5f; // Smaller force for continuous collision
             rb.AddForce(pushForce, ForceMode2D.Force);
-        }
-    }
-    
-    // Handle trigger collision with infected particles
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        // Check if we collided with an infected particle
-        if (other.CompareTag(infectedParticleTag))
-        {
-            Debug.Log($"Enemy {gameObject.name} COLLIDED with particle! Distance: {Vector2.Distance(transform.position, other.transform.position):F3}");
-            
-            // Consume the particle (destroy it)
-            Destroy(other.gameObject);
-            
-            Debug.Log($"Enemy {gameObject.name} CONSUMED infected particle! Searching for more...");
-            
-            // Immediately search for the next particle
-            FindBestTarget();
-            
-            // If we were targeting this particle, find a new target
-            if (isTargetingParticle && currentTarget == other.transform)
-            {
-                FindBestTarget();
-            }
-            
-            // Apply a small speed boost after consuming a particle
-            currentVelocity *= 1.2f;
-            rb.linearVelocity = currentVelocity;
         }
     }
 }

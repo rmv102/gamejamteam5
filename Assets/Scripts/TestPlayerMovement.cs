@@ -12,7 +12,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Dash Settings")]
     public float dashSpeed = 20f;
     public float dashDuration = 0.3f;
-    public float dashCooldown = 2.5f; // Increased from 1f to 2.5f for longer cooldown
+    public float dashCooldown = 1f;
     
     private Rigidbody2D rb;
     private Vector2 moveInput;
@@ -160,72 +160,6 @@ public class PlayerMovement : MonoBehaviour
     public float GetDashCooldownRemaining()
     {
         return Mathf.Max(0f, dashCooldownTimer);
-    }
-    
-    // Public method to get total dash cooldown
-    public float GetDashCooldownTotal()
-    {
-        return dashCooldown;
-    }
-    
-    // Public method to get cooldown progress (0 = ready, 1 = just used)
-    public float GetDashCooldownProgress()
-    {
-        return dashCooldown > 0 ? (dashCooldown - dashCooldownTimer) / dashCooldown : 0f;
-    }
-    
-    // Public method to check if dash is ready
-    public bool IsDashReady()
-    {
-        return dashCooldownTimer <= 0f && !isDashing;
-    }
-    
-    // Visual feedback for dash cooldown using OnGUI
-    void OnGUI()
-    {
-        if (dashCooldownTimer > 0f || isDashing)
-        {
-            // Draw cooldown indicator
-            float progress = GetDashCooldownProgress();
-            bool isReady = IsDashReady();
-            
-            // Position in top-left corner
-            float x = 20f;
-            float y = 20f;
-            float width = 200f;
-            float height = 20f;
-            
-            // Background
-            GUI.color = new Color(0, 0, 0, 0.5f);
-            GUI.DrawTexture(new Rect(x, y, width, height), Texture2D.whiteTexture);
-            
-            // Progress bar
-            if (isDashing)
-            {
-                GUI.color = Color.yellow;
-            }
-            else if (isReady)
-            {
-                GUI.color = Color.green;
-            }
-            else
-            {
-                GUI.color = Color.red;
-            }
-            
-            GUI.DrawTexture(new Rect(x, y, width * progress, height), Texture2D.whiteTexture);
-            
-            // Text
-            GUI.color = Color.white;
-            string text = isDashing ? "DASHING!" : 
-                         isReady ? "DASH READY" : 
-                         $"DASH: {dashCooldownTimer:F1}s";
-            
-            GUI.Label(new Rect(x, y + 25, 200, 30), text);
-            
-            // Reset color
-            GUI.color = Color.white;
-        }
     }
 }
 
