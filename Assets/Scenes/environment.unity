@@ -206,7 +206,11 @@ SpriteRenderer:
   m_Size: {x: 11.309999, y: 26.753628}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
+<<<<<<< Updated upstream
   m_WasSpriteAssigned: 1
+=======
+  m_WasSpriteAssigned: 0
+>>>>>>> Stashed changes
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &156136874
@@ -281,7 +285,11 @@ SpriteRenderer:
   m_Size: {x: 34.804718, y: 21.6}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
+<<<<<<< Updated upstream
   m_WasSpriteAssigned: 1
+=======
+  m_WasSpriteAssigned: 0
+>>>>>>> Stashed changes
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &156136876
@@ -386,7 +394,11 @@ SpriteRenderer:
   m_Size: {x: 7.0299997, y: 20.20274}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
+<<<<<<< Updated upstream
   m_WasSpriteAssigned: 1
+=======
+  m_WasSpriteAssigned: 0
+>>>>>>> Stashed changes
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &595885221
@@ -494,7 +506,11 @@ SpriteRenderer:
   m_Size: {x: 34.804718, y: 21.6}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
+<<<<<<< Updated upstream
   m_WasSpriteAssigned: 1
+=======
+  m_WasSpriteAssigned: 0
+>>>>>>> Stashed changes
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &650820254
@@ -557,6 +573,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b617507da6d07e749b7efdb34e1173e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineFollow
+<<<<<<< Updated upstream
+=======
+  m_VcamOwner: {fileID: 673781983}
+>>>>>>> Stashed changes
   TrackerSettings:
     BindingMode: 4
     PositionDamping: {x: 1, y: 1, z: 1}
@@ -580,6 +600,7 @@ MonoBehaviour:
     Enabled: 0
     m_Value: 0
   OutputChannel: 1
+<<<<<<< Updated upstream
   StandbyUpdate: 2
   m_StreamingVersion: 20241001
   m_LegacyPriority: 0
@@ -587,6 +608,26 @@ MonoBehaviour:
     TrackingTarget: {fileID: 793920451}
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
+=======
+  ActivationId: 0
+  m_QueuePriority: 2147483647
+  StandbyUpdate: 2
+  m_CachedName: 
+  m_WasStarted: 0
+  m_ChildStatusUpdated: 1
+  m_ParentVcam: {fileID: 0}
+  m_CachedFollowTarget: {fileID: 793920451}
+  m_CachedFollowTargetVcam: {fileID: 0}
+  m_CachedLookAtTarget: {fileID: 793920451}
+  m_CachedLookAtTargetVcam: {fileID: 0}
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  <Extensions>k__BackingField: []
+  <PreviousStateIsValid>k__BackingField: 1
+  <FollowTargetChanged>k__BackingField: 0
+  <LookAtTargetChanged>k__BackingField: 0
+  Target: {TrackingTarget: {fileID: 793920451}, LookAtTarget: {fileID: 0}, CustomLookAtTarget: 0}
+>>>>>>> Stashed changes
   Lens:
     FieldOfView: 60.000004
     OrthographicSize: 36.58498
@@ -606,7 +647,20 @@ MonoBehaviour:
       Curvature: {x: 2, y: 11}
       BarrelClipping: 0.25
       Anamorphism: 0
+<<<<<<< Updated upstream
   BlendHint: 0
+=======
+    m_OrthoFromCamera: 0
+    m_PhysicalFromCamera: 0
+    m_AspectFromCamera: 1.7786561
+    m_SourceCamera: {fileID: 1538221083}
+  BlendHint: 0
+  m_Pipeline:
+  - {fileID: 673781982}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+>>>>>>> Stashed changes
 --- !u!1 &793920446
 GameObject:
   m_ObjectHideFlags: 0
@@ -643,9 +697,23 @@ MonoBehaviour:
   speed: 8
   acceleration: 20
   deceleration: 15
+<<<<<<< Updated upstream
   dashSpeed: 20
   dashDuration: 0.3
   dashCooldown: 1
+=======
+  forceMultiplier: 2
+  maxForce: 50
+  useForceBasedMovement: 1
+  dashForceMultiplier: 5
+  dashMaxForce: 200
+  useVelocityDuringDash: 1
+  dashSpeed: 20
+  dashDuration: 0.3
+  dashCooldown: 1
+  maxDashes: 5
+  dashKillRadius: 1.5
+>>>>>>> Stashed changes
 --- !u!50 &793920448
 Rigidbody2D:
   serializedVersion: 5
@@ -993,12 +1061,21 @@ MonoBehaviour:
     Style: 1
     Time: 3
     CustomCurve:
+<<<<<<< Updated upstream
       serializedVersion: 2
+=======
+>>>>>>> Stashed changes
       m_Curve: []
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
   CustomBlends: {fileID: 0}
+<<<<<<< Updated upstream
+=======
+  m_OutputCamera: {fileID: 1538221083}
+  m_TargetOverride: {fileID: 0}
+  m_LastFrameUpdated: 9
+>>>>>>> Stashed changes
 --- !u!1 &1645432043
 GameObject:
   m_ObjectHideFlags: 0
@@ -1086,7 +1163,11 @@ SpriteRenderer:
   m_Size: {x: 7.0299997, y: 20.20274}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
+<<<<<<< Updated upstream
   m_WasSpriteAssigned: 1
+=======
+  m_WasSpriteAssigned: 0
+>>>>>>> Stashed changes
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &1926200833
@@ -1161,7 +1242,11 @@ SpriteRenderer:
   m_Size: {x: 21.6, y: 30.46413}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
+<<<<<<< Updated upstream
   m_WasSpriteAssigned: 1
+=======
+  m_WasSpriteAssigned: 0
+>>>>>>> Stashed changes
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &1926200835
@@ -1227,6 +1312,7 @@ MonoBehaviour:
     Enabled: 0
     m_Value: 0
   OutputChannel: 1
+<<<<<<< Updated upstream
   StandbyUpdate: 2
   m_StreamingVersion: 20241001
   m_LegacyPriority: 0
@@ -1234,6 +1320,26 @@ MonoBehaviour:
     TrackingTarget: {fileID: 1418898824}
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
+=======
+  ActivationId: 4
+  m_QueuePriority: 0
+  StandbyUpdate: 2
+  m_CachedName: 
+  m_WasStarted: 1
+  m_ChildStatusUpdated: 1
+  m_ParentVcam: {fileID: 0}
+  m_CachedFollowTarget: {fileID: 1418898824}
+  m_CachedFollowTargetVcam: {fileID: 0}
+  m_CachedLookAtTarget: {fileID: 1418898824}
+  m_CachedLookAtTargetVcam: {fileID: 0}
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  <Extensions>k__BackingField: []
+  <PreviousStateIsValid>k__BackingField: 1
+  <FollowTargetChanged>k__BackingField: 0
+  <LookAtTargetChanged>k__BackingField: 0
+  Target: {TrackingTarget: {fileID: 1418898824}, LookAtTarget: {fileID: 0}, CustomLookAtTarget: 0}
+>>>>>>> Stashed changes
   Lens:
     FieldOfView: 60.000004
     OrthographicSize: 36.58498
@@ -1253,7 +1359,20 @@ MonoBehaviour:
       Curvature: {x: 2, y: 11}
       BarrelClipping: 0.25
       Anamorphism: 0
+<<<<<<< Updated upstream
   BlendHint: 0
+=======
+    m_OrthoFromCamera: 0
+    m_PhysicalFromCamera: 0
+    m_AspectFromCamera: 1.7786561
+    m_SourceCamera: {fileID: 1538221083}
+  BlendHint: 0
+  m_Pipeline:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+>>>>>>> Stashed changes
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
