@@ -13,6 +13,8 @@ public class PlayerMovement : MonoBehaviour
     public float dashSpeed = 20f;
     public float dashDuration = 0.3f;
     public float dashCooldown = 2.5f; // Increased from 1f to 2.5f for longer cooldown
+    public int maxDashes = 5; // Maximum number of dashes
+    public float dashKillRadius = 1.5f; // Radius for killing enemies during dash
     
     private Rigidbody2D rb;
     private Vector2 moveInput;
@@ -20,6 +22,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isDashing = false;
     private float dashTimer = 0f;
     private float dashCooldownTimer = 0f;
+    private int currentDashes; // Current number of dashes available
 
     // Start is called before the first frame update
     void Start()
@@ -36,6 +39,10 @@ public class PlayerMovement : MonoBehaviour
             rb.freezeRotation = true; // Prevent rotation
             rb.interpolation = RigidbodyInterpolation2D.Interpolate; // Smooth interpolation
         }
+        
+        // Initialize dash count
+        currentDashes = maxDashes;
+        Debug.Log($"Player initialized with {currentDashes} dashes (max: {maxDashes})");
     }
 
     // Update is called once per frame
@@ -54,9 +61,12 @@ public class PlayerMovement : MonoBehaviour
         {
             dashCooldownTimer -= Time.deltaTime;
         }
+        
+        // Check if all enemies are cleared (reward system)
+        CheckForEnemyClear();
 
         // Check for dash input
-        if (keyboard.spaceKey.wasPressedThisFrame && !isDashing && dashCooldownTimer <= 0f)
+        if (keyboard.spaceKey.wasPressedThisFrame && !isDashing && dashCooldownTimer <= 0f && currentDashes > 0)
         {
             StartDash();
         }
@@ -110,6 +120,9 @@ public class PlayerMovement : MonoBehaviour
             float dashProgress = 1f - (dashTimer / dashDuration);
             float currentDashSpeed = Mathf.Lerp(dashSpeed, 0f, dashProgress * dashProgress); // Quadratic easing for smooth deceleration
             rb.linearVelocity = dashDirection * currentDashSpeed;
+            
+            // Check for enemies during dash (backup method)
+            CheckForEnemiesDuringDash();
         }
         else
         {
@@ -132,13 +145,16 @@ public class PlayerMovement : MonoBehaviour
 
     void StartDash()
     {
-        // Only dash if we have a movement direction
-        if (moveInput.magnitude > 0.1f)
+        // Only dash if we have a movement direction and dashes available
+        if (moveInput.magnitude > 0.1f && currentDashes > 0)
         {
             isDashing = true;
             dashTimer = dashDuration;
             dashDirection = moveInput.normalized;
             dashCooldownTimer = dashCooldown;
+            currentDashes--; // Consume a dash
+            
+            Debug.Log($"Player started dash in direction: {dashDirection}");
         }
     }
 
@@ -148,6 +164,65 @@ public class PlayerMovement : MonoBehaviour
         dashTimer = 0f;
         // Stop the player when dash ends
         rb.linearVelocity = Vector2.zero;
+    }
+    
+    // Handle collision with enemies during dash
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (isDashing)
+        {
+            // Check if it's an enemy (has enemy_pathfinder component)
+            if (other.GetComponent<enemy_pathfinder>() != null)
+            {
+                Debug.Log($"Player dashed through and killed enemy: {other.name}");
+                Destroy(other.gameObject);
+            }
+        }
+    }
+    
+    // Handle collision with enemies during dash (for non-trigger colliders)
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (isDashing)
+        {
+            // Check if it's an enemy (has enemy_pathfinder component)
+            if (collision.gameObject.GetComponent<enemy_pathfinder>() != null)
+            {
+                Debug.Log($"Player dashed through and killed enemy: {collision.gameObject.name}");
+                Destroy(collision.gameObject);
+            }
+        }
+    }
+    
+    // Backup method to check for enemies during dash
+    void CheckForEnemiesDuringDash()
+    {
+        // Find all enemies within dash kill radius
+        Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position, dashKillRadius);
+        
+        foreach (Collider2D enemy in enemies)
+        {
+            // Check if it's an enemy (has enemy_pathfinder component)
+            if (enemy != null && enemy.GetComponent<enemy_pathfinder>() != null)
+            {
+                Debug.Log($"Player dashed through and killed enemy (backup method): {enemy.name}");
+                Destroy(enemy.gameObject);
+            }
+        }
+    }
+    
+    // Check if all enemies are killed and reward player
+    void CheckForEnemyClear()
+    {
+        // Count remaining enemies
+        int enemyCount = FindObjectsOfType<enemy_pathfinder>().Length;
+        
+        // If no enemies left and we have less than max dashes, refill dashes
+        if (enemyCount == 0 && currentDashes < maxDashes)
+        {
+            ResetDashes();
+            Debug.Log("All enemies cleared! Dashes refilled!");
+        }
     }
 
     // Public method to check if player is dashing
@@ -177,23 +252,81 @@ public class PlayerMovement : MonoBehaviour
     // Public method to check if dash is ready
     public bool IsDashReady()
     {
-        return dashCooldownTimer <= 0f && !isDashing;
+        return dashCooldownTimer <= 0f && !isDashing && currentDashes > 0;
+    }
+    
+    // Public method to get current dash count
+    public int GetCurrentDashes()
+    {
+        return currentDashes;
+    }
+    
+    // Public method to get max dashes
+    public int GetMaxDashes()
+    {
+        return maxDashes;
+    }
+    
+    // Public method to add dashes (for power-ups or respawn)
+    public void AddDashes(int amount)
+    {
+        currentDashes = Mathf.Min(currentDashes + amount, maxDashes);
+    }
+    
+    // Public method to reset dashes
+    public void ResetDashes()
+    {
+        currentDashes = maxDashes;
+        Debug.Log($"Dashes reset! Current dashes: {currentDashes}/{maxDashes}");
+    }
+    
+    // Debug method to add dashes (for testing)
+    [ContextMenu("Add Dash")]
+    public void AddDash()
+    {
+        if (currentDashes < maxDashes)
+        {
+            currentDashes++;
+            Debug.Log($"Dash added! Current dashes: {currentDashes}/{maxDashes}");
+        }
+    }
+    
+    // Debug method to reset dashes (for testing)
+    [ContextMenu("Reset Dashes")]
+    public void ResetDashesDebug()
+    {
+        ResetDashes();
     }
     
     // Visual feedback for dash cooldown using OnGUI
     void OnGUI()
     {
+        // Position in top-left corner
+        float x = 20f;
+        float y = 20f;
+        float width = 200f;
+        float height = 20f;
+        
+        // Draw dash count
+        GUI.color = Color.white;
+        string dashText = $"DASHES: {currentDashes}/{maxDashes}";
+        GUI.Label(new Rect(x, y, 200, 30), dashText);
+        
+        // Draw individual dash indicators
+        for (int i = 0; i < maxDashes; i++)
+        {
+            Color dashColor = i < currentDashes ? Color.green : Color.gray;
+            GUI.color = dashColor;
+            GUI.DrawTexture(new Rect(x + (i * 25), y + 35, 20, 20), Texture2D.whiteTexture);
+        }
+        
+        // Draw cooldown indicator if on cooldown or dashing
         if (dashCooldownTimer > 0f || isDashing)
         {
-            // Draw cooldown indicator
             float progress = GetDashCooldownProgress();
             bool isReady = IsDashReady();
             
-            // Position in top-left corner
-            float x = 20f;
-            float y = 20f;
-            float width = 200f;
-            float height = 20f;
+            y += 30f; // Move down for cooldown bar
             
             // Background
             GUI.color = new Color(0, 0, 0, 0.5f);
@@ -222,9 +355,19 @@ public class PlayerMovement : MonoBehaviour
                          $"DASH: {dashCooldownTimer:F1}s";
             
             GUI.Label(new Rect(x, y + 25, 200, 30), text);
-            
-            // Reset color
-            GUI.color = Color.white;
+        }
+        
+        // Reset color
+        GUI.color = Color.white;
+    }
+    
+    // Debug visualization for dash kill radius
+    void OnDrawGizmos()
+    {
+        if (isDashing)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, dashKillRadius);
         }
     }
 }

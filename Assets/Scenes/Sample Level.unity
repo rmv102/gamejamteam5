@@ -1869,6 +1869,59 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c1cf081e60ac524ab29d51da4ea6974, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InfectionController
+--- !u!1 &814681776
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 814681778}
+  - component: {fileID: 814681777}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &814681777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 814681776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3526f229c2449c49bfd8dd460ce6f18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
+  enemyPrefab: {fileID: 6441724896865601564, guid: ad8dcc2922371004db977fd0348f97f2, type: 3}
+  maxEnemies: 5
+  spawnRadius: 15
+  spawnInterval: 3
+  veinLayer:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  showDebugInfo: 1
+  showSpawnRadius: 1
+--- !u!4 &814681778
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 814681776}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -13.21278, y: 2.05078, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &819213259
 GameObject:
   m_ObjectHideFlags: 0
@@ -4634,3 +4687,4 @@ SceneRoots:
   - {fileID: 571511871}
   - {fileID: 859307757}
   - {fileID: 1278955620}
+  - {fileID: 814681778}
