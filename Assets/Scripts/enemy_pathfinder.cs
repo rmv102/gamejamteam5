@@ -44,7 +44,6 @@ public class enemy_pathfinder : MonoBehaviour
     private Vector2 lastPosition;
     private float stuckTimer;
     private Vector2 lastVelocity;
-    private int stuckDirection = 1;
     
     // Target tracking
     private Transform currentTarget;

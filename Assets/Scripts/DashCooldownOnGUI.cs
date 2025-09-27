@@ -25,7 +25,7 @@ public class DashCooldownOnGUI : MonoBehaviour
     void Start()
     {
         // Find the player movement component
-        playerMovement = FindObjectOfType<PlayerMovement>();
+        playerMovement = FindFirstObjectByType<PlayerMovement>();
         if (playerMovement == null)
         {
             Debug.LogError("DashCooldownOnGUI: No PlayerMovement found in scene!");
