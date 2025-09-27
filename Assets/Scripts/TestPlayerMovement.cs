@@ -33,7 +33,6 @@ public class PlayerMovement : MonoBehaviour
     public float dashSpeed = 20f;
     public float dashDuration = 0.3f;
     public float dashCooldown = 2.5f; // Increased from 1f to 2.5f for longer cooldown
-    public int maxDashes = 5; // Maximum number of dashes
     public float dashKillRadius = 1.5f; // Radius for killing enemies during dash
     
     private Rigidbody2D rb;
@@ -43,7 +42,6 @@ public class PlayerMovement : MonoBehaviour
     private bool isDashing = false;
     private float dashTimer = 0f;
     private float dashCooldownTimer = 0f;
-    private int currentDashes; // Current number of dashes available
     
     // Movement sound variables
     private bool isPlayingMovementSound = false;
@@ -70,9 +68,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
         
-        // Initialize dash count
-        currentDashes = maxDashes;
-        Debug.Log($"Player initialized with {currentDashes} dashes (max: {maxDashes})");
+        Debug.Log("Player initialized with unlimited dashes");
         
         // Setup audio
         SetupAudio();
@@ -170,15 +166,13 @@ public class PlayerMovement : MonoBehaviour
             dashCooldownTimer -= Time.deltaTime;
         }
         
-        // Check if all enemies are cleared (reward system)
-        CheckForEnemyClear();
 
         // Check for dash input
         if (keyboard.spaceKey.wasPressedThisFrame)
         {
-            Debug.Log($"Space pressed! isDashing: {isDashing}, dashCooldownTimer: {dashCooldownTimer:F2}, currentDashes: {currentDashes}");
+            Debug.Log($"Space pressed! isDashing: {isDashing}, dashCooldownTimer: {dashCooldownTimer:F2}");
             
-            if (!isDashing && dashCooldownTimer <= 0f && currentDashes > 0)
+            if (!isDashing && dashCooldownTimer <= 0f)
             {
                 StartDash();
             }
@@ -186,7 +180,6 @@ public class PlayerMovement : MonoBehaviour
             {
                 if (isDashing) Debug.Log("Cannot dash: Already dashing");
                 if (dashCooldownTimer > 0f) Debug.Log($"Cannot dash: On cooldown ({dashCooldownTimer:F2}s remaining)");
-                if (currentDashes <= 0) Debug.Log("Cannot dash: No dashes remaining");
             }
         }
 
@@ -326,42 +319,33 @@ public class PlayerMovement : MonoBehaviour
 
     void StartDash()
     {
-        Debug.Log($"StartDash called! moveInput.magnitude: {moveInput.magnitude:F2}, lastMoveInput.magnitude: {lastMoveInput.magnitude:F2}, currentDashes: {currentDashes}");
+        Debug.Log($"StartDash called! moveInput.magnitude: {moveInput.magnitude:F2}, lastMoveInput.magnitude: {lastMoveInput.magnitude:F2}");
         
-        // Only dash if we have dashes available
-        if (currentDashes > 0)
+        // Use current movement direction, or last movement direction if not currently moving
+        Vector2 dashDir = moveInput.magnitude > 0.1f ? moveInput.normalized : lastMoveInput.normalized;
+        
+        // If we have no movement direction at all, dash forward (up)
+        if (dashDir.magnitude < 0.1f)
         {
-            // Use current movement direction, or last movement direction if not currently moving
-            Vector2 dashDir = moveInput.magnitude > 0.1f ? moveInput.normalized : lastMoveInput.normalized;
-            
-            // If we have no movement direction at all, dash forward (up)
-            if (dashDir.magnitude < 0.1f)
-            {
-                dashDir = Vector2.up;
-                Debug.Log("No movement direction found, dashing forward (up)");
-            }
-            
-            isDashing = true;
-            dashTimer = dashDuration;
-            dashDirection = dashDir;
-            dashCooldownTimer = dashCooldown;
-            currentDashes--; // Consume a dash
-            
-            // Stop movement sound during dash
-            if (isPlayingMovementSound)
-            {
-                StopMovementSound();
-            }
-            
-            // Play dash sound effect
-            PlayDashSound();
-            
-            Debug.Log($"Player started dash in direction: {dashDirection}, remaining dashes: {currentDashes}");
+            dashDir = Vector2.up;
+            Debug.Log("No movement direction found, dashing forward (up)");
         }
-        else
+        
+        isDashing = true;
+        dashTimer = dashDuration;
+        dashDirection = dashDir;
+        dashCooldownTimer = dashCooldown;
+        
+        // Stop movement sound during dash
+        if (isPlayingMovementSound)
         {
-            Debug.Log("Cannot dash: No dashes available");
+            StopMovementSound();
         }
+        
+        // Play dash sound effect
+        PlayDashSound();
+        
+        Debug.Log($"Player started dash in direction: {dashDirection}");
     }
     
     void PlayDashSound()
@@ -496,19 +480,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
     
-    // Check if all enemies are killed and reward player
-    void CheckForEnemyClear()
-    {
-        // Count remaining enemies
-        int enemyCount = FindObjectsOfType<enemy_pathfinder>().Length;
-        
-        // If no enemies left and we have less than max dashes, refill dashes
-        if (enemyCount == 0 && currentDashes < maxDashes)
-        {
-            ResetDashes();
-            Debug.Log("All enemies cleared! Dashes refilled!");
-        }
-    }
 
     // Public method to check if player is dashing
     public bool IsDashing()
@@ -537,51 +508,9 @@ public class PlayerMovement : MonoBehaviour
     // Public method to check if dash is ready
     public bool IsDashReady()
     {
-        return dashCooldownTimer <= 0f && !isDashing && currentDashes > 0;
+        return dashCooldownTimer <= 0f && !isDashing;
     }
     
-    // Public method to get current dash count
-    public int GetCurrentDashes()
-    {
-        return currentDashes;
-    }
-    
-    // Public method to get max dashes
-    public int GetMaxDashes()
-    {
-        return maxDashes;
-    }
-    
-    // Public method to add dashes (for power-ups or respawn)
-    public void AddDashes(int amount)
-    {
-        currentDashes = Mathf.Min(currentDashes + amount, maxDashes);
-    }
-    
-    // Public method to reset dashes
-    public void ResetDashes()
-    {
-        currentDashes = maxDashes;
-        Debug.Log($"Dashes reset! Current dashes: {currentDashes}/{maxDashes}");
-    }
-    
-    // Debug method to add dashes (for testing)
-    [ContextMenu("Add Dash")]
-    public void AddDash()
-    {
-        if (currentDashes < maxDashes)
-        {
-            currentDashes++;
-            Debug.Log($"Dash added! Current dashes: {currentDashes}/{maxDashes}");
-        }
-    }
-    
-    // Debug method to reset dashes (for testing)
-    [ContextMenu("Reset Dashes")]
-    public void ResetDashesDebug()
-    {
-        ResetDashes();
-    }
     
     // Visual feedback for dash cooldown using OnGUI
     void OnGUI()
@@ -592,26 +521,11 @@ public class PlayerMovement : MonoBehaviour
         float width = 200f;
         float height = 20f;
         
-        // Draw dash count
-        GUI.color = Color.white;
-        string dashText = $"DASHES: {currentDashes}/{maxDashes}";
-        GUI.Label(new Rect(x, y, 200, 30), dashText);
-        
-        // Draw individual dash indicators
-        for (int i = 0; i < maxDashes; i++)
-        {
-            Color dashColor = i < currentDashes ? Color.green : Color.gray;
-            GUI.color = dashColor;
-            GUI.DrawTexture(new Rect(x + (i * 25), y + 35, 20, 20), Texture2D.whiteTexture);
-        }
-        
         // Draw cooldown indicator if on cooldown or dashing
         if (dashCooldownTimer > 0f || isDashing)
         {
             float progress = GetDashCooldownProgress();
             bool isReady = IsDashReady();
-            
-            y += 30f; // Move down for cooldown bar
             
             // Background
             GUI.color = new Color(0, 0, 0, 0.5f);

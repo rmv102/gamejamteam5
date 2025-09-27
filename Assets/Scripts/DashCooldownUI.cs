@@ -9,11 +9,18 @@ public class DashCooldownUI : MonoBehaviour
     [SerializeField] private Text cooldownText; // Text showing remaining time
     
     [Header("Visual Settings")]
-    [SerializeField] private Color readyColor = Color.green;
-    [SerializeField] private Color cooldownColor = Color.red;
-    [SerializeField] private Color chargingColor = Color.yellow;
+    [SerializeField] private Color barColor = Color.white; // Always white bar
+    [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.3f); // Semi-transparent background
     [SerializeField] private bool showText = true;
     [SerializeField] private bool useCircularProgress = true;
+    
+    [Header("Font Settings")]
+    [SerializeField] private Font customFont; // Font that can be assigned in Unity Inspector
+    [SerializeField] private int fontSize = 16;
+    
+    [Header("Position Settings")]
+    [SerializeField] private float verticalOffset = 0f; // Vertical position offset (positive = up, negative = down)
+    [SerializeField] private bool rightAlign = true; // Right align the UI element
     
     [Header("Animation Settings")]
     [SerializeField] private float pulseSpeed = 2f;
@@ -40,24 +47,56 @@ public class DashCooldownUI : MonoBehaviour
         if (cooldownFill != null)
         {
             cooldownFill.fillAmount = 1f;
-            cooldownFill.color = readyColor;
+            cooldownFill.color = barColor; // Always white
         }
         
         if (cooldownBackground != null)
         {
-            cooldownBackground.color = readyColor;
+            cooldownBackground.color = backgroundColor;
         }
         
         if (cooldownText != null)
         {
             cooldownText.text = "READY";
             cooldownText.color = Color.white;
+            
+            // Apply custom font if assigned
+            if (customFont != null)
+            {
+                cooldownText.font = customFont;
+            }
+            cooldownText.fontSize = fontSize;
+        }
+        
+        // Set up right alignment
+        SetupRightAlignment();
+    }
+    
+    void SetupRightAlignment()
+    {
+        if (rightAlign)
+        {
+            // Get the RectTransform component
+            RectTransform rectTransform = GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                // Set anchor to top-right
+                rectTransform.anchorMin = new Vector2(1f, 1f);
+                rectTransform.anchorMax = new Vector2(1f, 1f);
+                rectTransform.pivot = new Vector2(1f, 1f);
+                
+                // Position with vertical offset
+                rectTransform.anchoredPosition = new Vector2(-10f, -10f + verticalOffset);
+            }
         }
     }
     
     void Update()
     {
         if (playerMovement == null) return;
+        
+        // Update position if vertical offset changed
+        UpdatePosition();
         
         // Get cooldown information from player movement
         float cooldownRemaining = GetDashCooldownRemaining();
@@ -77,6 +116,19 @@ public class DashCooldownUI : MonoBehaviour
         }
     }
     
+    void UpdatePosition()
+    {
+        if (rightAlign)
+        {
+            RectTransform rectTransform = GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                // Update position with current vertical offset
+                rectTransform.anchoredPosition = new Vector2(-10f, -10f + verticalOffset);
+            }
+        }
+    }
+    
     void UpdateCooldownVisual(float progress, float remaining, bool isDashing)
     {
         // Update fill amount
@@ -92,35 +144,31 @@ public class DashCooldownUI : MonoBehaviour
             }
         }
         
-        // Update colors based on state
-        Color currentColor;
+        // Update ready state
         bool wasReady = isReady;
         
         if (isDashing)
         {
-            currentColor = chargingColor;
             isReady = false;
         }
         else if (remaining <= 0f)
         {
-            currentColor = readyColor;
             isReady = true;
         }
         else
         {
-            currentColor = cooldownColor;
             isReady = false;
         }
         
-        // Apply colors
+        // Apply colors - always white bar
         if (cooldownFill != null)
         {
-            cooldownFill.color = currentColor;
+            cooldownFill.color = barColor; // Always white
         }
         
         if (cooldownBackground != null)
         {
-            cooldownBackground.color = Color.Lerp(currentColor, Color.white, 0.3f);
+            cooldownBackground.color = backgroundColor; // Semi-transparent background
         }
         
         // Update text
