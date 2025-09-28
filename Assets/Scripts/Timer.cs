@@ -17,6 +17,7 @@ public class Timer : MonoBehaviour
     public GameObject chest;
     public GameObject head;
     public CinemachineCamera camOut; // Assign in Inspector
+    private bool gameFinished = false;
 
 
     public Color targetColor = new Color32(0x11, 0x11, 0x11, 255); // #111111
@@ -40,34 +41,11 @@ public class Timer : MonoBehaviour
         }
     }
 
-    void ChangeArea()
-    {
-        shapeRenderers = areas[currentAreaIndex].GetComponentsInChildren<SpriteShapeRenderer>();
-
-        // Store original colors
-        for (int i = 0; i < shapeRenderers.Length; i++)
-        {
-            shapeRenderers[i].color = targetColor;
-        }
-
-        currentAreaIndex++;
-        if (currentAreaIndex < areas.Length)
-        {
-            shapeRenderers = areas[currentAreaIndex].GetComponentsInChildren<SpriteShapeRenderer>();
-
-            // Store original colors
-            originalColors = new Color[shapeRenderers.Length];
-            for (int i = 0; i < shapeRenderers.Length; i++)
-            {
-                originalColors[i] = shapeRenderers[i].color;
-            }
-        }
-    }
-
     private bool levelTriggered = false; // prevents multiple triggers per level
 
 void Update()
 {
+    if (gameFinished) return;
     int currentInfected = GameObject.FindGameObjectsWithTag(scoreTracker.particleTag).Length;
     float percent = (float)currentInfected / Mathf.Max(1, scoreTracker.maxParticles);
     float percentColor = Mathf.Clamp01(percent);
@@ -102,13 +80,14 @@ void Update()
                 originalColors[i] = shapeRenderers[i].color;
 
             level++;
-            remainingTime += 60f;
+            remainingTime += 15f;
             scoreTracker.setPercentage(0);
             levelTriggered = false; // unlock for next level
         }
         else
         {
             // No more areas → win
+            gameFinished = true;
             ShowGameOver(true);
         }
     }
