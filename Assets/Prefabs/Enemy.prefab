@@ -30,8 +30,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -13.7, y: 10.54, z: 0}
-  m_LocalScale: {x: 0.3, y: 0.3, z: 0}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.15, y: 0.15, z: 0}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -168,24 +168,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71e3dfba192359d4a9f7fc606cd43418, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::enemy_pathfinder
-  moveSpeed: 4
-  detectionRange: 10
+  moveSpeed: 1
+  detectionRange: 5
   stoppingDistance: 1
   pathUpdateInterval: 0.5
-  acceleration: 4
+  acceleration: 1
   deceleration: 8
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 4294967295
   stuckThreshold: 0.1
   stuckTimeThreshold: 1
-  unstuckForce: 3
-  borderAvoidanceDistance: 1.5
-  borderPushForce: 5
+  unstuckForce: 1
+  borderAvoidanceDistance: 1
+  borderPushForce: 2
   borderLayer:
     serializedVersion: 2
     m_Bits: 4294967295
-  particleDetectionRange: 15
+  particleDetectionRange: 5
   infectedParticleTag: InfectedParticle
   particlePriorityMultiplier: 3
   particleStoppingDistance: 0.1
