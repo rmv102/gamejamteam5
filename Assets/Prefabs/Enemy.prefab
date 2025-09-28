@@ -172,8 +172,8 @@ MonoBehaviour:
   detectionRange: 5
   stoppingDistance: 1
   pathUpdateInterval: 0.5
-  acceleration: 1
-  deceleration: 8
+  acceleration: 4
+  deceleration: 2
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 4294967295
