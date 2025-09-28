@@ -11,6 +11,10 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] float spawnInterval = 3f; // Base time between spawn attempts
     [SerializeField] float spawnIntervalRandomness = 1f; // Random variation in spawn timing
     
+    [Header("Spawn Cooldown Settings")]
+    [SerializeField] float minSpawnCooldown = 2f; // Minimum time between any spawns
+    [SerializeField] float killSpawnCooldown = 1.5f; // Extra cooldown when enemy is killed
+    
     [Header("Debug")]
     [SerializeField] bool showDebugInfo = true;
     [SerializeField] bool showSpawnPoints = true;
@@ -19,6 +23,8 @@ public class EnemySpawner : MonoBehaviour
     private float lastSpawnTime;
     private float nextSpawnTime;
     private int currentEnemyCount = 0;
+    private int previousEnemyCount = 0;
+    private float lastKillTime = 0f;
     
     void Start()
     {
@@ -96,14 +102,29 @@ public class EnemySpawner : MonoBehaviour
         // Count current enemies
         currentEnemyCount = FindObjectsByType<enemy_pathfinder>(FindObjectsSortMode.None).Length;
         
+        // Check if an enemy was killed (count decreased)
+        if (currentEnemyCount < previousEnemyCount)
+        {
+            lastKillTime = Time.time;
+            Debug.Log($"EnemySpawner: Enemy killed! Count: {previousEnemyCount} -> {currentEnemyCount}. Kill cooldown activated.");
+        }
+        
+        // Update previous count
+        previousEnemyCount = currentEnemyCount;
+        
         // Log status every 5 seconds
         if (showDebugInfo && Time.frameCount % 300 == 0)
         {
-            Debug.Log($"EnemySpawner: Current enemies: {currentEnemyCount}/{maxEnemies}, Time until next spawn: {(nextSpawnTime - Time.time):F1}s");
+            float timeSinceKill = Time.time - lastKillTime;
+            Debug.Log($"EnemySpawner: Current enemies: {currentEnemyCount}/{maxEnemies}, Time until next spawn: {(nextSpawnTime - Time.time):F1}s, Time since last kill: {timeSinceKill:F1}s");
         }
         
-        // Try to spawn if under limit and enough time has passed
-        if (currentEnemyCount < maxEnemies && Time.time >= nextSpawnTime)
+        // Check if we can spawn (under limit, enough time passed, and cooldowns satisfied)
+        bool canSpawn = currentEnemyCount < maxEnemies && Time.time >= nextSpawnTime;
+        bool minCooldownPassed = (Time.time - lastSpawnTime) >= minSpawnCooldown;
+        bool killCooldownPassed = (Time.time - lastKillTime) >= killSpawnCooldown;
+        
+        if (canSpawn && minCooldownPassed && killCooldownPassed)
         {
             Debug.Log("EnemySpawner: Attempting to spawn enemy...");
             Vector2 spawnPosition = FindSpawnPosition();
@@ -118,6 +139,18 @@ public class EnemySpawner : MonoBehaviour
                 Debug.LogWarning("EnemySpawner: Could not find valid spawn position!");
                 // Try again sooner if we failed to find a position
                 SetNextSpawnTime(0.5f); // Retry in 0.5 seconds
+            }
+        }
+        else if (currentEnemyCount < maxEnemies)
+        {
+            // Log why we can't spawn
+            if (showDebugInfo && Time.frameCount % 300 == 0)
+            {
+                string reason = "";
+                if (!minCooldownPassed) reason += "Min cooldown not passed. ";
+                if (!killCooldownPassed) reason += "Kill cooldown not passed. ";
+                if (!canSpawn) reason += "Spawn time not reached. ";
+                Debug.Log($"EnemySpawner: Cannot spawn yet - {reason}");
             }
         }
     }
@@ -272,6 +305,8 @@ public class EnemySpawner : MonoBehaviour
         Debug.Log($"Current Enemies: {FindObjectsByType<enemy_pathfinder>(FindObjectsSortMode.None).Length}");
         Debug.Log($"Next Spawn Time: {nextSpawnTime:F1} (Current Time: {Time.time:F1})");
         Debug.Log($"Time Until Next Spawn: {(nextSpawnTime - Time.time):F1} seconds");
+        Debug.Log($"Min Spawn Cooldown: {minSpawnCooldown}s (Time since last spawn: {(Time.time - lastSpawnTime):F1}s)");
+        Debug.Log($"Kill Spawn Cooldown: {killSpawnCooldown}s (Time since last kill: {(Time.time - lastKillTime):F1}s)");
         
         // Test spawn points
         if (spawnPoints == null || spawnPoints.Length == 0)
