@@ -137,9 +137,9 @@ void Update()
 
         if (win) {
             CameraManager.SwitchCamera(camOut);
-            gameOverText.text = "YOU WIN! INFECTED!";
+            gameOverText.text = "INFECTED.";
         } else {
-            gameOverText.text = "YOU LOSE! INFECTION INCOMPLETE!";
+            gameOverText.text = "INFECTION INCOMPLETE!";
         }
         Time.timeScale = 0f; // Pause all gameplay
     }
