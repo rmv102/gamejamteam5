@@ -7,11 +7,12 @@ public class ScoreTracker : MonoBehaviour
     [SerializeField] Text feedbackText;
     public string particleTag = "InfectedParticle";
     public int maxParticles = 300; // your cap
+    float percentGenerated = 0f;
 
     void Update()
     {
         int current = GameObject.FindGameObjectsWithTag(particleTag).Length;
-        float percentGenerated = Mathf.Clamp01((float)current / Mathf.Max(1, maxParticles));
+        percentGenerated = Mathf.Clamp01((float)current / Mathf.Max(1, maxParticles));
         progressBar.fillAmount = percentGenerated;
 
         int percent = Mathf.RoundToInt(percentGenerated * 100f);
@@ -26,6 +27,12 @@ public class ScoreTracker : MonoBehaviour
             feedbackText.text = "Status: Severe Infection";
         else
             feedbackText.text = "Status: Fully Infected!";
+    }
+
+    public void setPercentage(int percent)
+    {
+        percentGenerated = percent / 100f;
+        progressBar.fillAmount = percentGenerated;
     }
 
 }
