@@ -141,7 +141,7 @@ void Update()
         } else {
             gameOverText.text = "INFECTION INCOMPLETE!";
         }
-        Time.timeScale = 0f; // Pause all gameplay
+        //Time.timeScale = 0f; // Pause all gameplay
     }
 
     private string FormatTime(float time)
