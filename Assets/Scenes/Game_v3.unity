@@ -5416,12 +5416,16 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 901749111}
     - target: {fileID: 1321978849559456432, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
+      propertyPath: Feedback
+      value: 
+      objectReference: {fileID: 1014523467}
+    - target: {fileID: 1321978849559456432, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
       propertyPath: playerSpawner
       value: 
       objectReference: {fileID: 770270903}
     - target: {fileID: 1321978849559456432, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
       propertyPath: remainingTime
-      value: 100
+      value: 120
       objectReference: {fileID: 0}
     - target: {fileID: 1498367727651470212, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
       propertyPath: m_FontData.m_Font
@@ -5649,7 +5653,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9066701197422167571, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -44
+      value: -73
       objectReference: {fileID: 0}
     - target: {fileID: 9066701197422167571, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -14714,7 +14718,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
   enemyPrefab: {fileID: 6441724896865601564, guid: ad8dcc2922371004db977fd0348f97f2, type: 3}
-  maxEnemies: 7
+  maxEnemies: 12
   spawnPoints:
   - {fileID: 561901391}
   - {fileID: 1996997956}
@@ -17540,8 +17544,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InfectedParticleDropper
   particlePrefab: {fileID: 5064948860932274619, guid: d9e51fc7af0c9cd40a2bc9d3b130e037, type: 3}
-  dropDistance: 0.05
-  clearanceRadius: 0.05
+  dropDistance: 0.07
+  clearanceRadius: 0.07
   particleTag: InfectedParticle
 --- !u!114 &924376122
 MonoBehaviour:
@@ -19425,6 +19429,17 @@ PolygonCollider2D:
       - {x: 4.482125, y: 1.4344687}
       - {x: 4.7593274, y: 2.3142052}
   m_UseDelaunayMesh: 0
+--- !u!114 &1014523467 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1498367727651470212, guid: 263d3d924d814eb4c9692a21ecbce810, type: 3}
+  m_PrefabInstance: {fileID: 350433191}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
 --- !u!1 &1019577034
 GameObject:
   m_ObjectHideFlags: 0

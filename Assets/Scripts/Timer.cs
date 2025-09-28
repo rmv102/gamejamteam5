@@ -7,6 +7,7 @@ public class Timer : MonoBehaviour
 {
     public ScoreTracker scoreTracker; // Assign in Inspector
     public Text gameOverText; // Assign in Inspector (the overlay message)
+    public Text Feedback;
     private bool gameOverShown = false;
     public Text timerText; // Assign this in the Inspector
     public float remainingTime = 20f; // 2 minutes in seconds
@@ -80,7 +81,7 @@ void Update()
                 originalColors[i] = shapeRenderers[i].color;
 
             level++;
-            remainingTime += 15f;
+            remainingTime += 0f;
             scoreTracker.setPercentage(0);
             levelTriggered = false; // unlock for next level
         }
@@ -113,6 +114,10 @@ void Update()
         gameOverShown = true;
 
         gameOverText.gameObject.SetActive(true); // <-- Ensure the text is visible
+        Feedback.gameObject.SetActive(false);
+        scoreTracker.gameObject.SetActive(false);
+        timerText.gameObject.SetActive(false);
+
 
         if (win) {
             CameraManager.SwitchCamera(camOut);
